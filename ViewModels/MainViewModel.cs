@@ -1,18 +1,22 @@
 using System.Collections.ObjectModel;
+using System.Timers;
 using CommunityToolkit.Maui.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HighFidelity.Ui.Services.Interfaces;
 using HighFidelity.Ui.Models;
 using HighFidelity.Ui.Views;
+using Timer = System.Timers.Timer;
 
 namespace HighFidelity.Ui.ViewModels;
 
 public partial class MainViewModel : BaseViewModel
 {
     private const int PageSize = 5;
+    private const double DocumentPollIntervalMs = 5000;
 
     private readonly IDashboardDataService _dataService;
+    private Timer? _documentPollTimer;
     private readonly IPrintService _printService;
     private readonly List<OrderModel> _allOrders = [];
 
@@ -40,6 +44,9 @@ public partial class MainViewModel : BaseViewModel
     public string DashboardSubtitle => "Overview of Latest Month";
     public bool IsDataLoaded { get; private set; }
 
+    [ObservableProperty]
+    private string _documentStatusSummary = "";
+
 #pragma warning disable MVVMTK0045 // ObservableProperty fields not AOT-compatible on WinRT
     [ObservableProperty]
     private string _searchText = string.Empty;
@@ -55,6 +62,16 @@ public partial class MainViewModel : BaseViewModel
         _dataService = dataService;
         _printService = printService;
         Title = DashboardDisplayTitle;
+
+        // Auto-poll documents every 5 seconds so status badges update in real-time
+        _documentPollTimer = new Timer(DocumentPollIntervalMs);
+        _documentPollTimer.Elapsed += async (_, _) =>
+        {
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                await LoadDocumentsAsync();
+            });
+        };
     }
 
     public async Task InitializeAsync()
@@ -62,6 +79,7 @@ public partial class MainViewModel : BaseViewModel
         if (IsDataLoaded) return;
         await LoadDataCommand.ExecuteAsync(null);
         IsDataLoaded = true;
+        _documentPollTimer?.Start();
     }
 
     [RelayCommand]
@@ -303,8 +321,30 @@ public partial class MainViewModel : BaseViewModel
         if (result.IsFailure) return;
 
         Documents.Clear();
+        int pending = 0, processing = 0, completed = 0, failed = 0;
         foreach (var doc in result.Data!)
+        {
             Documents.Add(doc);
+            switch (doc.ProcessingStatus)
+            {
+                case "Pending": pending++; break;
+                case "Processing": processing++; break;
+                case "Completed": completed++; break;
+                case "Failed": failed++; break;
+            }
+        }
+
+        DocumentStatusSummary = FormatDocumentSummary(pending, processing, completed, failed);
+    }
+
+    private static string FormatDocumentSummary(int pending, int processing, int completed, int failed)
+    {
+        var parts = new List<string>();
+        if (completed > 0) parts.Add($"{completed} completed");
+        if (processing > 0) parts.Add($"{processing} processing");
+        if (pending > 0) parts.Add($"{pending} waiting");
+        if (failed > 0) parts.Add($"{failed} failed");
+        return parts.Count > 0 ? string.Join(", ", parts) : "No documents";
     }
 
     [RelayCommand]
