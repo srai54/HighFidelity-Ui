@@ -22,7 +22,7 @@
                         Padding="14,8"
                         Command="{Binding UploadDocumentCommand, Source={x:Reference DocumentSelf}}" />
                 <Label x:Name="StatusLabel"
-                       Text="Ready"
+                       Text="{Binding DocumentStatusSummary, Source={x:Reference DocumentSelf}}"
                        FontSize="11"
                        TextColor="{StaticResource TextSecondary}"
                        VerticalOptions="Center" />

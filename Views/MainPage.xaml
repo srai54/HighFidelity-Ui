@@ -90,6 +90,13 @@
                     <components:ActivityTimelineView />
                     <components:OrderTableView x:Name="OrderTable" Grid.Column="1" />
                 </Grid>
+
+                <!-- Row 4: Documents -->
+                <components:DocumentUploadView
+                    Grid.Row="4"
+                    Documents="{Binding Documents}"
+                    UploadDocumentCommand="{Binding UploadDocumentCommand}"
+                    DocumentStatusSummary="{Binding DocumentStatusSummary}" />
             </VerticalStackLayout>
         </ScrollView>
 
