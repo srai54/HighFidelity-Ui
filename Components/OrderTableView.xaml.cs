@@ -56,7 +56,7 @@ public partial class OrderTableView : ContentView
         {
             Grid.SetRow(SearchEntry, 1);
             Grid.SetColumn(SearchEntry, 0);
-            Grid.SetColumnSpan(SearchEntry, 7);
+            Grid.SetColumnSpan(SearchEntry, 8);
             SearchEntry.WidthRequest = -1;
             SearchEntry.HorizontalOptions = LayoutOptions.Fill;
         }

@@ -314,6 +314,19 @@ public partial class MainViewModel : BaseViewModel
         await _printService.PrintOrdersAsync(filtered, "OrderStatus_LatestMonth");
     }
 
+    [RelayCommand]
+    private async Task DownloadPdfAsync()
+    {
+        var selected = Orders.Where(o => o.IsSelected).ToList();
+        if (selected.Count == 0)
+        {
+            await Shell.Current.DisplayAlertAsync("No Selection",
+                "Select orders by checking the boxes in the table.", "OK");
+            return;
+        }
+        await _printService.PrintOrdersAsync(selected, "SelectedOrders");
+    }
+
     // ---------- Data loading ----------
 
     private async Task LoadDashboardCardsAsync()

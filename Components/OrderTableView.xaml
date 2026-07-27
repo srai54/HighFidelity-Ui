@@ -21,7 +21,7 @@
             <!-- Toolbar (search drops to its own row on narrow screens; see code-behind) -->
             <Grid x:Name="OrdersToolbar"
                   Grid.Row="1"
-                  ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto"
+                  ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto,Auto"
                   RowDefinitions="Auto,Auto"
                   ColumnSpacing="8"
                   RowSpacing="10">
@@ -46,9 +46,12 @@
                 <Button Grid.Column="3" Text="&#xf02f;" Style="{StaticResource IconButtonPrint}" FontSize="12"
                         Command="{Binding PrintOrdersCommand}"
                         ToolTipProperties.Text="Print order list" />
+                <Button Grid.Column="4" Text="&#xf1c1;" Style="{StaticResource IconButtonPrint}" FontSize="12"
+                        Command="{Binding DownloadPdfCommand}"
+                        ToolTipProperties.Text="Download PDF of selected orders" />
                 <!-- Search field -->
                 <Entry x:Name="SearchEntry"
-                       Grid.Column="5"
+                       Grid.Column="6"
                        Placeholder="Search"
                        Text="{Binding SearchText}"
                        PlaceholderColor="{StaticResource TextLight}"
@@ -59,7 +62,7 @@
                        HeightRequest="32"
                        VerticalOptions="Center"
                        ToolTipProperties.Text="Filter by invoice, customer, country or status" />
-                <Button Grid.Column="6" Text="&#xf0c7;" Style="{StaticResource PrimaryButton}" FontSize="11" Padding="12,0" HeightRequest="32"
+                <Button Grid.Column="7" Text="&#xf0c7;" Style="{StaticResource PrimaryButton}" FontSize="11" Padding="12,0" HeightRequest="32"
                         Command="{Binding UploadDocumentCommand}"
                         ToolTipProperties.Text="Upload a document to Azure Blob Storage">
                     <Button.ImageSource>
@@ -96,12 +99,13 @@
                             Stroke="Transparent"
                             StrokeShape="RoundRectangle 4"
                             Padding="14,11">
-                        <Grid ColumnDefinitions="70,*,90,80,90">
-                            <Label Text="INVOICE" Style="{StaticResource TableHeaderLabel}" />
-                            <Label Grid.Column="1" Text="CUSTOMERS" Style="{StaticResource TableHeaderLabel}" />
-                            <Label Grid.Column="2" Text="FROM" Style="{StaticResource TableHeaderLabel}" />
-                            <Label Grid.Column="3" Text="PRICE" Style="{StaticResource TableHeaderLabel}" />
-                            <Label Grid.Column="4" Text="STATUS" Style="{StaticResource TableHeaderLabel}" />
+                        <Grid ColumnDefinitions="40,70,*,90,80,90">
+                            <!-- checkbox column placeholder -->
+                            <Label Grid.Column="1" Text="INVOICE" Style="{StaticResource TableHeaderLabel}" />
+                            <Label Grid.Column="2" Text="CUSTOMERS" Style="{StaticResource TableHeaderLabel}" />
+                            <Label Grid.Column="3" Text="FROM" Style="{StaticResource TableHeaderLabel}" />
+                            <Label Grid.Column="4" Text="PRICE" Style="{StaticResource TableHeaderLabel}" />
+                            <Label Grid.Column="5" Text="STATUS" Style="{StaticResource TableHeaderLabel}" />
                         </Grid>
                     </Border>
 
@@ -120,12 +124,13 @@
                                 <TapGestureRecognizer Command="{Binding SelectOrderCommand, Source={RelativeSource AncestorType={x:Type vm:MainViewModel}}}"
                                                       CommandParameter="{Binding .}" />
                             </Grid.GestureRecognizers>
-                            <Grid ColumnDefinitions="70,*,90,80,90" HeightRequest="43">
-                                <Label Text="{Binding Invoice}" FontSize="12" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
-                                <Label Grid.Column="1" Text="{Binding Customer}" FontSize="12" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
-                                <Label Grid.Column="2" Text="{Binding Country}" FontSize="12" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
-                                <Label Grid.Column="3" Text="{Binding Price, StringFormat='${0:F0}'}" FontSize="12" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
-                                <Border Grid.Column="4"
+                            <Grid ColumnDefinitions="40,70,*,90,80,90" HeightRequest="43">
+                                <CheckBox IsChecked="{Binding IsSelected}" VerticalOptions="Center" HorizontalOptions="Center" Color="{StaticResource PrimaryOrange}" />
+                                <Label Grid.Column="1" Text="{Binding Invoice}" FontSize="12" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                <Label Grid.Column="2" Text="{Binding Customer}" FontSize="12" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                <Label Grid.Column="3" Text="{Binding Country}" FontSize="12" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
+                                <Label Grid.Column="4" Text="{Binding Price, StringFormat='${0:F0}'}" FontSize="12" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                <Border Grid.Column="5"
                                         BackgroundColor="{Binding Status, Converter={StaticResource StatusBackgroundConverter}}"
                                         Stroke="Transparent"
                                         StrokeShape="RoundRectangle 3"

@@ -17,8 +17,13 @@ if errorlevel 2 goto android
 
 :windows
 echo.
+echo  Building...
+dotnet build -f net10.0-windows10.0.19041.0 HighFidelity.Ui.csproj
+if errorlevel 1 goto :eof
+echo  Unblocking for Windows Application Control...
+powershell -Command "Get-ChildItem -Path '%~dp0bin\Debug\net10.0-windows10.0.19041.0\win-x64' -Recurse -File | Unblock-File -Confirm:$false" 2>nul
 echo  Starting Windows app...
-dotnet build -t:Run -f net10.0-windows10.0.19041.0 HighFidelity.Ui.csproj
+start "" "%~dp0bin\Debug\net10.0-windows10.0.19041.0\win-x64\HighFidelity.Ui.exe"
 goto :eof
 
 :android
