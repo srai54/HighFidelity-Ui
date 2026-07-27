@@ -2,8 +2,13 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:models="clr-namespace:HighFidelity.Ui.Models"
+             xmlns:conv="clr-namespace:HighFidelity.Ui.Converters"
              x:Class="HighFidelity.Ui.Components.DocumentUploadView"
              x:Name="DocumentSelf">
+    <ContentView.Resources>
+        <conv:DocumentStatusColorConverter x:Key="StatusColor" />
+        <conv:DocumentStatusLabelConverter x:Key="StatusLabel" />
+    </ContentView.Resources>
     <Border Style="{StaticResource CardBorderStyle}" Padding="16">
         <VerticalStackLayout Spacing="12">
             <Label Text="Documents"
@@ -24,7 +29,7 @@
             </HorizontalStackLayout>
 
             <CollectionView ItemsSource="{Binding Documents, Source={x:Reference DocumentSelf}}"
-                            HeightRequest="200"
+                            HeightRequest="220"
                             SelectionMode="None">
                 <CollectionView.EmptyView>
                     <Label Text="No documents uploaded yet."
@@ -57,6 +62,19 @@
                                         </FormattedString>
                                     </Label.FormattedText>
                                 </Label>
+
+                                <!-- Processing status badge -->
+                                <Border Grid.Column="1"
+                                        Grid.RowSpan="2"
+                                        BackgroundColor="{Binding ProcessingStatus, Converter={StaticResource StatusColor}}"
+                                        StrokeThickness="0"
+                                        Padding="6,2"
+                                        VerticalOptions="Center"
+                                        HorizontalOptions="End">
+                                    <Label Text="{Binding ProcessingStatus, Converter={StaticResource StatusLabel}}"
+                                           FontSize="9"
+                                           TextColor="White" />
+                                </Border>
                             </Grid>
                         </Border>
                     </DataTemplate>

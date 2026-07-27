@@ -8,6 +8,8 @@ public class DocumentModel
     public string ContentType { get; set; } = string.Empty;
     public long FileSize { get; set; }
     public DateTime UploadedAtUtc { get; set; }
+    public string ProcessingStatus { get; set; } = "Pending";
+    public string? ProcessingError { get; set; }
 
     public string FileSizeDisplay => FileSize switch
     {
