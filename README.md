@@ -6,6 +6,20 @@ Runs on **Windows** and **Android** (iOS/macCatalyst targets included).
 
 ---
 
+## Branches
+
+| Branch | Purpose |
+|---|---|
+| `feature/enterprise-frontend-refactor` | **Active development line.** Enterprise EF Core backend integration, JWT auth, Documents upload feature, generic chart architecture. |
+| `master` | GitHub's default branch. Frozen at the original pre-refactor static-data build (23 commits behind) — a historical checkpoint, not kept in sync. |
+| `feature/backend-api-integration` | Historical — added the first Dapper/SQL LocalDB backend and wired the app to a live API. Fully superseded, an ancestor of the current mainline. |
+| `backend-split` | Historical — a 4-commit, path-rewritten extraction of just the backend code, used to bootstrap the standalone [HighFidelity-Api](https://github.com/srai54/HighFidelity-Api) repo. An orphaned snapshot, disjoint from this repo's main history. |
+| `feature/offline-demo-fallback` | Frozen checkpoint preserving the last commit with a static/embedded-data implementation (`StaticDashboardDataService`) — a fallback for demoing with no backend running, from before the mainline made the API a hard dependency. |
+| `refactor/generic-chart-architecture` | Frozen checkpoint right after the config-driven chart refactor (`ChartData`/`ChartTheme`/`ChartGeometry` + reusable `IDrawable` chart types) landed — an ancestor of the mainline, not diverged. |
+| `feature/interview-ready-ui` | Reset to the last commit before the Documents upload feature, checkbox column, and Download PDF button were added — kept for MAUI interview prep, showing the original dashboard only. |
+
+---
+
 ## Project Structure (per assignment)
 
 ```
