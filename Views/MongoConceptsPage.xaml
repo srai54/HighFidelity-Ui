@@ -3,11 +3,581 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:HighFidelity.Ui.ViewModels"
              xmlns:models="clr-namespace:HighFidelity.Ui.Models"
+             xmlns:converters="clr-namespace:HighFidelity.Ui.Converters"
+             xmlns:views="clr-namespace:HighFidelity.Ui.Views"
              x:Class="HighFidelity.Ui.Views.MongoConceptsPage"
              x:DataType="vm:MongoConceptsViewModel"
              BackgroundColor="{StaticResource PageBackground}"
              Shell.NavBarIsVisible="False"
              Title="{Binding Title}">
+    <ContentPage.Resources>
+        <converters:StatusBackgroundConverter x:Key="StatusBackgroundConverter" />
+
+        <!--
+            One DataTemplate per ConceptResultKind, selected by ConceptCardTemplateSelector
+            (see code-behind). Each card in the list builds exactly ONE of these — not all
+            of them stacked with IsVisible toggles. The first version did that (8 nested
+            BindableLayouts per card x 23 cards) and reliably crashed WinUI's native
+            renderer during scroll; this is the fix, not a stylistic preference.
+            Header markup (badge/topic/Run button/Note/status line) is duplicated across
+            templates since MAUI has no template-composition mechanism — mechanical but safe.
+        -->
+
+        <DataTemplate x:Key="MessageCardTemplate" x:DataType="models:ConceptResultItem">
+            <Border Style="{StaticResource CardBorderStyle}" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Grid.Column="0" BackgroundColor="{StaticResource PrimaryOrange}" Stroke="Transparent" StrokeShape="RoundRectangle 3" Padding="8,3" VerticalOptions="Center">
+                            <Label Text="{Binding MethodLabel}" FontSize="10" FontAttributes="Bold" TextColor="White" />
+                        </Border>
+                        <Label Grid.Column="1" Text="{Binding Topic}" FontSize="13" FontAttributes="Bold" VerticalOptions="Center" Margin="10,0,0,0" TextColor="{StaticResource TextPrimary}" />
+                        <Button Grid.Column="2" Text="Run" Command="{Binding RunCommand}" FontSize="12" Padding="14,6" />
+                    </Grid>
+                    <Label Text="{Binding Note}" FontSize="10" TextColor="{StaticResource TextLight}" LineBreakMode="WordWrap" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Start" />
+                    <Label Text="{Binding StatusLine}" FontSize="10" TextColor="{StaticResource TextLight}" />
+                    <Label Text="{Binding ResultText}" FontSize="10" FontFamily="Courier" LineBreakMode="WordWrap" TextColor="{StaticResource TextPrimary}">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding IsError}" Value="True">
+                                <Setter Property="TextColor" Value="#F7284A" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="OrdersCardTemplate" x:DataType="models:ConceptResultItem">
+            <Border Style="{StaticResource CardBorderStyle}" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Grid.Column="0" BackgroundColor="{StaticResource PrimaryOrange}" Stroke="Transparent" StrokeShape="RoundRectangle 3" Padding="8,3" VerticalOptions="Center">
+                            <Label Text="{Binding MethodLabel}" FontSize="10" FontAttributes="Bold" TextColor="White" />
+                        </Border>
+                        <Label Grid.Column="1" Text="{Binding Topic}" FontSize="13" FontAttributes="Bold" VerticalOptions="Center" Margin="10,0,0,0" TextColor="{StaticResource TextPrimary}" />
+                        <Button Grid.Column="2" Text="Run" Command="{Binding RunCommand}" FontSize="12" Padding="14,6" />
+                    </Grid>
+                    <Label Text="{Binding Note}" FontSize="10" TextColor="{StaticResource TextLight}" LineBreakMode="WordWrap" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Start" />
+                    <Label Text="{Binding StatusLine}" FontSize="10" TextColor="{StaticResource TextLight}" />
+                    <Label Text="{Binding PagedInfo}" IsVisible="{Binding HasPagedInfo}" FontSize="11" FontAttributes="Bold" TextColor="{StaticResource TextSecondary}" />
+
+                    <VerticalStackLayout IsVisible="{Binding HasOrders}" Spacing="0">
+                        <Border BackgroundColor="{StaticResource TableHeaderBg}" Stroke="Transparent" StrokeShape="RoundRectangle 4" Padding="10,8">
+                            <Grid ColumnDefinitions="70,*,110,80,90">
+                                <Label Text="INVOICE" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="1" Text="CUSTOMER" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="2" Text="COUNTRY" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="3" Text="PRICE" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="4" Text="STATUS" Style="{StaticResource TableHeaderLabel}" />
+                            </Grid>
+                        </Border>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Orders}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:OrderRow">
+                                    <Grid RowDefinitions="*,1" Padding="10,0">
+                                        <Grid ColumnDefinitions="70,*,110,80,90" HeightRequest="38">
+                                            <Label Text="{Binding Invoice}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="1" Text="{Binding Customer}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="2" Text="{Binding Country}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="3" Text="{Binding Price, StringFormat='${0:F0}'}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Border Grid.Column="4" BackgroundColor="{Binding Status, Converter={StaticResource StatusBackgroundConverter}}" Stroke="Transparent" StrokeShape="RoundRectangle 3" WidthRequest="64" HeightRequest="22" HorizontalOptions="Start" VerticalOptions="Center">
+                                                <Label Text="{Binding Status}" FontSize="9" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center" />
+                                            </Border>
+                                        </Grid>
+                                        <BoxView Grid.Row="1" HeightRequest="1" Color="{StaticResource DividerColor}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+
+                    <Label Text="{Binding ResultText}" IsVisible="{Binding ShowRawFallback}" FontSize="10" FontFamily="Courier" LineBreakMode="WordWrap" TextColor="{StaticResource TextPrimary}">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding IsError}" Value="True">
+                                <Setter Property="TextColor" Value="#F7284A" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="CountryRevenueCardTemplate" x:DataType="models:ConceptResultItem">
+            <Border Style="{StaticResource CardBorderStyle}" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Grid.Column="0" BackgroundColor="{StaticResource PrimaryOrange}" Stroke="Transparent" StrokeShape="RoundRectangle 3" Padding="8,3" VerticalOptions="Center">
+                            <Label Text="{Binding MethodLabel}" FontSize="10" FontAttributes="Bold" TextColor="White" />
+                        </Border>
+                        <Label Grid.Column="1" Text="{Binding Topic}" FontSize="13" FontAttributes="Bold" VerticalOptions="Center" Margin="10,0,0,0" TextColor="{StaticResource TextPrimary}" />
+                        <Button Grid.Column="2" Text="Run" Command="{Binding RunCommand}" FontSize="12" Padding="14,6" />
+                    </Grid>
+                    <Label Text="{Binding Note}" FontSize="10" TextColor="{StaticResource TextLight}" LineBreakMode="WordWrap" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Start" />
+                    <Label Text="{Binding StatusLine}" FontSize="10" TextColor="{StaticResource TextLight}" />
+
+                    <VerticalStackLayout IsVisible="{Binding HasCountryRevenues}" Spacing="0">
+                        <Border BackgroundColor="{StaticResource TableHeaderBg}" Stroke="Transparent" StrokeShape="RoundRectangle 4" Padding="10,8">
+                            <Grid ColumnDefinitions="*,100,130">
+                                <Label Text="COUNTRY" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="1" Text="ORDERS" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="2" Text="TOTAL REVENUE" Style="{StaticResource TableHeaderLabel}" />
+                            </Grid>
+                        </Border>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding CountryRevenues}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:CountryRevenueRow">
+                                    <Grid RowDefinitions="*,1" Padding="10,0">
+                                        <Grid ColumnDefinitions="*,100,130" HeightRequest="34">
+                                            <Label Text="{Binding Country}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="1" Text="{Binding OrderCount}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="2" Text="{Binding TotalRevenue, StringFormat='${0:F0}'}" FontSize="11" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                        </Grid>
+                                        <BoxView Grid.Row="1" HeightRequest="1" Color="{StaticResource DividerColor}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+
+                    <Label Text="{Binding ResultText}" IsVisible="{Binding ShowRawFallback}" FontSize="10" FontFamily="Courier" LineBreakMode="WordWrap" TextColor="{StaticResource TextPrimary}">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding IsError}" Value="True">
+                                <Setter Property="TextColor" Value="#F7284A" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="CountryStatsCardTemplate" x:DataType="models:ConceptResultItem">
+            <Border Style="{StaticResource CardBorderStyle}" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Grid.Column="0" BackgroundColor="{StaticResource PrimaryOrange}" Stroke="Transparent" StrokeShape="RoundRectangle 3" Padding="8,3" VerticalOptions="Center">
+                            <Label Text="{Binding MethodLabel}" FontSize="10" FontAttributes="Bold" TextColor="White" />
+                        </Border>
+                        <Label Grid.Column="1" Text="{Binding Topic}" FontSize="13" FontAttributes="Bold" VerticalOptions="Center" Margin="10,0,0,0" TextColor="{StaticResource TextPrimary}" />
+                        <Button Grid.Column="2" Text="Run" Command="{Binding RunCommand}" FontSize="12" Padding="14,6" />
+                    </Grid>
+                    <Label Text="{Binding Note}" FontSize="10" TextColor="{StaticResource TextLight}" LineBreakMode="WordWrap" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Start" />
+                    <Label Text="{Binding StatusLine}" FontSize="10" TextColor="{StaticResource TextLight}" />
+
+                    <VerticalStackLayout IsVisible="{Binding HasCountryStats}" Spacing="0">
+                        <Border BackgroundColor="{StaticResource TableHeaderBg}" Stroke="Transparent" StrokeShape="RoundRectangle 4" Padding="10,8">
+                            <Grid ColumnDefinitions="*,80,90,90,90">
+                                <Label Text="COUNTRY" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="1" Text="ORDERS" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="2" Text="MIN" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="3" Text="MAX" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="4" Text="AVG" Style="{StaticResource TableHeaderLabel}" />
+                            </Grid>
+                        </Border>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding CountryStatsRows}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:CountryStatsRow">
+                                    <Grid RowDefinitions="*,1" Padding="10,0">
+                                        <Grid ColumnDefinitions="*,80,90,90,90" HeightRequest="34">
+                                            <Label Text="{Binding Country}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="1" Text="{Binding OrderCount}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="2" Text="{Binding MinPrice, StringFormat='${0:F0}'}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="3" Text="{Binding MaxPrice, StringFormat='${0:F0}'}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="4" Text="{Binding AvgPrice, StringFormat='${0:F0}'}" FontSize="11" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                        </Grid>
+                                        <BoxView Grid.Row="1" HeightRequest="1" Color="{StaticResource DividerColor}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+
+                    <Label Text="{Binding ResultText}" IsVisible="{Binding ShowRawFallback}" FontSize="10" FontFamily="Courier" LineBreakMode="WordWrap" TextColor="{StaticResource TextPrimary}">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding IsError}" Value="True">
+                                <Setter Property="TextColor" Value="#F7284A" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="RankedOrdersCardTemplate" x:DataType="models:ConceptResultItem">
+            <Border Style="{StaticResource CardBorderStyle}" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Grid.Column="0" BackgroundColor="{StaticResource PrimaryOrange}" Stroke="Transparent" StrokeShape="RoundRectangle 3" Padding="8,3" VerticalOptions="Center">
+                            <Label Text="{Binding MethodLabel}" FontSize="10" FontAttributes="Bold" TextColor="White" />
+                        </Border>
+                        <Label Grid.Column="1" Text="{Binding Topic}" FontSize="13" FontAttributes="Bold" VerticalOptions="Center" Margin="10,0,0,0" TextColor="{StaticResource TextPrimary}" />
+                        <Button Grid.Column="2" Text="Run" Command="{Binding RunCommand}" FontSize="12" Padding="14,6" />
+                    </Grid>
+                    <Label Text="{Binding Note}" FontSize="10" TextColor="{StaticResource TextLight}" LineBreakMode="WordWrap" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Start" />
+                    <Label Text="{Binding StatusLine}" FontSize="10" TextColor="{StaticResource TextLight}" />
+
+                    <VerticalStackLayout IsVisible="{Binding HasRankedOrders}" Spacing="0">
+                        <Border BackgroundColor="{StaticResource TableHeaderBg}" Stroke="Transparent" StrokeShape="RoundRectangle 4" Padding="10,8">
+                            <Grid ColumnDefinitions="*,*,70,50,100,70,70">
+                                <Label Text="CUSTOMER" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="1" Text="COUNTRY" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="2" Text="PRICE" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="3" Text="RANK" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="4" Text="RUNNING TOTAL" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="5" Text="TIER (CASE)" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="6" Text="TIER (UDF)" Style="{StaticResource TableHeaderLabel}" />
+                            </Grid>
+                        </Border>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding RankedOrders}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:RankedOrderRow">
+                                    <Grid RowDefinitions="*,1" Padding="10,0">
+                                        <Grid ColumnDefinitions="*,*,70,50,100,70,70" HeightRequest="34">
+                                            <Label Text="{Binding Customer}" FontSize="10" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="1" Text="{Binding Country}" FontSize="10" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="2" Text="{Binding Price, StringFormat='${0:F0}'}" FontSize="10" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="3" Text="{Binding RankInCountry}" FontSize="10" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="4" Text="{Binding RunningTotalInCountry, StringFormat='${0:F0}'}" FontSize="10" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="5" Text="{Binding PriceTierCase}" FontSize="10" FontAttributes="Bold" TextColor="{StaticResource PrimaryOrange}" VerticalOptions="Center" />
+                                            <Label Grid.Column="6" Text="{Binding PriceTierUdf}" FontSize="10" FontAttributes="Bold" TextColor="{StaticResource PrimaryOrange}" VerticalOptions="Center" />
+                                        </Grid>
+                                        <BoxView Grid.Row="1" HeightRequest="1" Color="{StaticResource DividerColor}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+
+                    <Label Text="{Binding ResultText}" IsVisible="{Binding ShowRawFallback}" FontSize="10" FontFamily="Courier" LineBreakMode="WordWrap" TextColor="{StaticResource TextPrimary}">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding IsError}" Value="True">
+                                <Setter Property="TextColor" Value="#F7284A" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="EmployeeChainCardTemplate" x:DataType="models:ConceptResultItem">
+            <Border Style="{StaticResource CardBorderStyle}" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Grid.Column="0" BackgroundColor="{StaticResource PrimaryOrange}" Stroke="Transparent" StrokeShape="RoundRectangle 3" Padding="8,3" VerticalOptions="Center">
+                            <Label Text="{Binding MethodLabel}" FontSize="10" FontAttributes="Bold" TextColor="White" />
+                        </Border>
+                        <Label Grid.Column="1" Text="{Binding Topic}" FontSize="13" FontAttributes="Bold" VerticalOptions="Center" Margin="10,0,0,0" TextColor="{StaticResource TextPrimary}" />
+                        <Button Grid.Column="2" Text="Run" Command="{Binding RunCommand}" FontSize="12" Padding="14,6" />
+                    </Grid>
+                    <Label Text="{Binding Note}" FontSize="10" TextColor="{StaticResource TextLight}" LineBreakMode="WordWrap" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Start" />
+                    <Label Text="{Binding StatusLine}" FontSize="10" TextColor="{StaticResource TextLight}" />
+
+                    <VerticalStackLayout IsVisible="{Binding HasEmployeeChain}" Spacing="0" BindableLayout.ItemsSource="{Binding EmployeeChain}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:EmployeeChainRow">
+                                <Grid RowDefinitions="*,1" Padding="10,6">
+                                    <HorizontalStackLayout Spacing="6">
+                                        <Label Text="{Binding Name}" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
+                                        <Label Text="—" FontSize="12" TextColor="{StaticResource TextLight}" />
+                                        <Label Text="{Binding Title}" FontSize="12" TextColor="{StaticResource TextSecondary}" />
+                                        <Label Text="{Binding ManagerId, StringFormat='(reports to {0})'}" FontSize="10" TextColor="{StaticResource TextLight}" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+                                    <BoxView Grid.Row="1" HeightRequest="1" Color="{StaticResource DividerColor}" />
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <Label Text="{Binding ResultText}" IsVisible="{Binding ShowRawFallback}" FontSize="10" FontFamily="Courier" LineBreakMode="WordWrap" TextColor="{StaticResource TextPrimary}">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding IsError}" Value="True">
+                                <Setter Property="TextColor" Value="#F7284A" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="CustomerInsightsCardTemplate" x:DataType="models:ConceptResultItem">
+            <Border Style="{StaticResource CardBorderStyle}" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Grid.Column="0" BackgroundColor="{StaticResource PrimaryOrange}" Stroke="Transparent" StrokeShape="RoundRectangle 3" Padding="8,3" VerticalOptions="Center">
+                            <Label Text="{Binding MethodLabel}" FontSize="10" FontAttributes="Bold" TextColor="White" />
+                        </Border>
+                        <Label Grid.Column="1" Text="{Binding Topic}" FontSize="13" FontAttributes="Bold" VerticalOptions="Center" Margin="10,0,0,0" TextColor="{StaticResource TextPrimary}" />
+                        <Button Grid.Column="2" Text="Run" Command="{Binding RunCommand}" FontSize="12" Padding="14,6" />
+                    </Grid>
+                    <Label Text="{Binding Note}" FontSize="10" TextColor="{StaticResource TextLight}" LineBreakMode="WordWrap" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Start" />
+                    <Label Text="{Binding StatusLine}" FontSize="10" TextColor="{StaticResource TextLight}" />
+
+                    <VerticalStackLayout IsVisible="{Binding HasCustomerInsights}" Spacing="0">
+                        <Border BackgroundColor="{StaticResource TableHeaderBg}" Stroke="Transparent" StrokeShape="RoundRectangle 4" Padding="10,8">
+                            <Grid ColumnDefinitions="*,*,80,120">
+                                <Label Text="CUSTOMER" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="1" Text="COUNTRY" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="2" Text="PRICE" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="3" Text="COUNTRY AVERAGE" Style="{StaticResource TableHeaderLabel}" />
+                            </Grid>
+                        </Border>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding CustomerInsights}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:CustomerInsightRow">
+                                    <Grid RowDefinitions="*,1" Padding="10,0">
+                                        <Grid ColumnDefinitions="*,*,80,120" HeightRequest="34">
+                                            <Label Text="{Binding Customer}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="1" Text="{Binding Country}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="2" Text="{Binding Price, StringFormat='${0:F0}'}" FontSize="11" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="3" Text="{Binding CountryAveragePrice, StringFormat='${0:F1}'}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
+                                        </Grid>
+                                        <BoxView Grid.Row="1" HeightRequest="1" Color="{StaticResource DividerColor}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+
+                    <Label Text="{Binding ResultText}" IsVisible="{Binding ShowRawFallback}" FontSize="10" FontFamily="Courier" LineBreakMode="WordWrap" TextColor="{StaticResource TextPrimary}">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding IsError}" Value="True">
+                                <Setter Property="TextColor" Value="#F7284A" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="PivotCardTemplate" x:DataType="models:ConceptResultItem">
+            <Border Style="{StaticResource CardBorderStyle}" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Grid.Column="0" BackgroundColor="{StaticResource PrimaryOrange}" Stroke="Transparent" StrokeShape="RoundRectangle 3" Padding="8,3" VerticalOptions="Center">
+                            <Label Text="{Binding MethodLabel}" FontSize="10" FontAttributes="Bold" TextColor="White" />
+                        </Border>
+                        <Label Grid.Column="1" Text="{Binding Topic}" FontSize="13" FontAttributes="Bold" VerticalOptions="Center" Margin="10,0,0,0" TextColor="{StaticResource TextPrimary}" />
+                        <Button Grid.Column="2" Text="Run" Command="{Binding RunCommand}" FontSize="12" Padding="14,6" />
+                    </Grid>
+                    <Label Text="{Binding Note}" FontSize="10" TextColor="{StaticResource TextLight}" LineBreakMode="WordWrap" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Start" />
+                    <Label Text="{Binding StatusLine}" FontSize="10" TextColor="{StaticResource TextLight}" />
+
+                    <VerticalStackLayout IsVisible="{Binding HasPivotRows}" Spacing="0">
+                        <Border BackgroundColor="{StaticResource TableHeaderBg}" Stroke="Transparent" StrokeShape="RoundRectangle 4" Padding="10,8">
+                            <Grid ColumnDefinitions="*,70,80,80">
+                                <Label Text="COUNTRY" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="1" Text="OPEN" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="2" Text="PROCESS" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="3" Text="ON HOLD" Style="{StaticResource TableHeaderLabel}" />
+                            </Grid>
+                        </Border>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding PivotRows}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:PivotRow">
+                                    <Grid RowDefinitions="*,1" Padding="10,0">
+                                        <Grid ColumnDefinitions="*,70,80,80" HeightRequest="34">
+                                            <Label Text="{Binding Country}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="1" Text="{Binding Open}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" HorizontalOptions="Center" />
+                                            <Label Grid.Column="2" Text="{Binding Process}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" HorizontalOptions="Center" />
+                                            <Label Grid.Column="3" Text="{Binding OnHold}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" HorizontalOptions="Center" />
+                                        </Grid>
+                                        <BoxView Grid.Row="1" HeightRequest="1" Color="{StaticResource DividerColor}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+
+                    <Label Text="{Binding ResultText}" IsVisible="{Binding ShowRawFallback}" FontSize="10" FontFamily="Courier" LineBreakMode="WordWrap" TextColor="{StaticResource TextPrimary}">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding IsError}" Value="True">
+                                <Setter Property="TextColor" Value="#F7284A" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="UnpivotCardTemplate" x:DataType="models:ConceptResultItem">
+            <Border Style="{StaticResource CardBorderStyle}" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Grid.Column="0" BackgroundColor="{StaticResource PrimaryOrange}" Stroke="Transparent" StrokeShape="RoundRectangle 3" Padding="8,3" VerticalOptions="Center">
+                            <Label Text="{Binding MethodLabel}" FontSize="10" FontAttributes="Bold" TextColor="White" />
+                        </Border>
+                        <Label Grid.Column="1" Text="{Binding Topic}" FontSize="13" FontAttributes="Bold" VerticalOptions="Center" Margin="10,0,0,0" TextColor="{StaticResource TextPrimary}" />
+                        <Button Grid.Column="2" Text="Run" Command="{Binding RunCommand}" FontSize="12" Padding="14,6" />
+                    </Grid>
+                    <Label Text="{Binding Note}" FontSize="10" TextColor="{StaticResource TextLight}" LineBreakMode="WordWrap" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Start" />
+                    <Label Text="{Binding StatusLine}" FontSize="10" TextColor="{StaticResource TextLight}" />
+
+                    <VerticalStackLayout IsVisible="{Binding HasUnpivotRows}" Spacing="0">
+                        <Border BackgroundColor="{StaticResource TableHeaderBg}" Stroke="Transparent" StrokeShape="RoundRectangle 4" Padding="10,8">
+                            <Grid ColumnDefinitions="*,*,70">
+                                <Label Text="COUNTRY" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="1" Text="STATUS" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="2" Text="COUNT" Style="{StaticResource TableHeaderLabel}" />
+                            </Grid>
+                        </Border>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding UnpivotRows}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:UnpivotRow">
+                                    <Grid RowDefinitions="*,1" Padding="10,0">
+                                        <Grid ColumnDefinitions="*,*,70" HeightRequest="30">
+                                            <Label Text="{Binding Country}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="1" Text="{Binding Status}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="2" Text="{Binding Count}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" HorizontalOptions="Center" />
+                                        </Grid>
+                                        <BoxView Grid.Row="1" HeightRequest="1" Color="{StaticResource DividerColor}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+
+                    <Label Text="{Binding ResultText}" IsVisible="{Binding ShowRawFallback}" FontSize="10" FontFamily="Courier" LineBreakMode="WordWrap" TextColor="{StaticResource TextPrimary}">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding IsError}" Value="True">
+                                <Setter Property="TextColor" Value="#F7284A" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="FacetCardTemplate" x:DataType="models:ConceptResultItem">
+            <Border Style="{StaticResource CardBorderStyle}" Padding="16">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Grid.Column="0" BackgroundColor="{StaticResource PrimaryOrange}" Stroke="Transparent" StrokeShape="RoundRectangle 3" Padding="8,3" VerticalOptions="Center">
+                            <Label Text="{Binding MethodLabel}" FontSize="10" FontAttributes="Bold" TextColor="White" />
+                        </Border>
+                        <Label Grid.Column="1" Text="{Binding Topic}" FontSize="13" FontAttributes="Bold" VerticalOptions="Center" Margin="10,0,0,0" TextColor="{StaticResource TextPrimary}" />
+                        <Button Grid.Column="2" Text="Run" Command="{Binding RunCommand}" FontSize="12" Padding="14,6" />
+                    </Grid>
+                    <Label Text="{Binding Note}" FontSize="10" TextColor="{StaticResource TextLight}" LineBreakMode="WordWrap" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Start" />
+                    <Label Text="{Binding StatusLine}" FontSize="10" TextColor="{StaticResource TextLight}" />
+
+                    <!-- Facet is the one card combining three shapes, so it alone gets section captions. -->
+                    <Label Text="Top orders by price" IsVisible="{Binding HasOrders}" FontSize="10" FontAttributes="Bold" TextColor="{StaticResource TextSecondary}" />
+                    <VerticalStackLayout IsVisible="{Binding HasOrders}" Spacing="0">
+                        <Border BackgroundColor="{StaticResource TableHeaderBg}" Stroke="Transparent" StrokeShape="RoundRectangle 4" Padding="10,8">
+                            <Grid ColumnDefinitions="70,*,110,80,90">
+                                <Label Text="INVOICE" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="1" Text="CUSTOMER" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="2" Text="COUNTRY" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="3" Text="PRICE" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="4" Text="STATUS" Style="{StaticResource TableHeaderLabel}" />
+                            </Grid>
+                        </Border>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Orders}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:OrderRow">
+                                    <Grid RowDefinitions="*,1" Padding="10,0">
+                                        <Grid ColumnDefinitions="70,*,110,80,90" HeightRequest="34">
+                                            <Label Text="{Binding Invoice}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="1" Text="{Binding Customer}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="2" Text="{Binding Country}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="3" Text="{Binding Price, StringFormat='${0:F0}'}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Border Grid.Column="4" BackgroundColor="{Binding Status, Converter={StaticResource StatusBackgroundConverter}}" Stroke="Transparent" StrokeShape="RoundRectangle 3" WidthRequest="64" HeightRequest="22" HorizontalOptions="Start" VerticalOptions="Center">
+                                                <Label Text="{Binding Status}" FontSize="9" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center" />
+                                            </Border>
+                                        </Grid>
+                                        <BoxView Grid.Row="1" HeightRequest="1" Color="{StaticResource DividerColor}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+
+                    <Label Text="Revenue by country" IsVisible="{Binding HasCountryRevenues}" FontSize="10" FontAttributes="Bold" TextColor="{StaticResource TextSecondary}" />
+                    <VerticalStackLayout IsVisible="{Binding HasCountryRevenues}" Spacing="0">
+                        <Border BackgroundColor="{StaticResource TableHeaderBg}" Stroke="Transparent" StrokeShape="RoundRectangle 4" Padding="10,8">
+                            <Grid ColumnDefinitions="*,100,130">
+                                <Label Text="COUNTRY" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="1" Text="ORDERS" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="2" Text="TOTAL REVENUE" Style="{StaticResource TableHeaderLabel}" />
+                            </Grid>
+                        </Border>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding CountryRevenues}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:CountryRevenueRow">
+                                    <Grid RowDefinitions="*,1" Padding="10,0">
+                                        <Grid ColumnDefinitions="*,100,130" HeightRequest="30">
+                                            <Label Text="{Binding Country}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="1" Text="{Binding OrderCount}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="2" Text="{Binding TotalRevenue, StringFormat='${0:F0}'}" FontSize="11" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                        </Grid>
+                                        <BoxView Grid.Row="1" HeightRequest="1" Color="{StaticResource DividerColor}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+
+                    <Label Text="Order stats by country" IsVisible="{Binding HasCountryStats}" FontSize="10" FontAttributes="Bold" TextColor="{StaticResource TextSecondary}" />
+                    <VerticalStackLayout IsVisible="{Binding HasCountryStats}" Spacing="0">
+                        <Border BackgroundColor="{StaticResource TableHeaderBg}" Stroke="Transparent" StrokeShape="RoundRectangle 4" Padding="10,8">
+                            <Grid ColumnDefinitions="*,80,90,90,90">
+                                <Label Text="COUNTRY" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="1" Text="ORDERS" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="2" Text="MIN" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="3" Text="MAX" Style="{StaticResource TableHeaderLabel}" />
+                                <Label Grid.Column="4" Text="AVG" Style="{StaticResource TableHeaderLabel}" />
+                            </Grid>
+                        </Border>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding CountryStatsRows}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:CountryStatsRow">
+                                    <Grid RowDefinitions="*,1" Padding="10,0">
+                                        <Grid ColumnDefinitions="*,80,90,90,90" HeightRequest="30">
+                                            <Label Text="{Binding Country}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="1" Text="{Binding OrderCount}" FontSize="11" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="2" Text="{Binding MinPrice, StringFormat='${0:F0}'}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="3" Text="{Binding MaxPrice, StringFormat='${0:F0}'}" FontSize="11" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                            <Label Grid.Column="4" Text="{Binding AvgPrice, StringFormat='${0:F0}'}" FontSize="11" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
+                                        </Grid>
+                                        <BoxView Grid.Row="1" HeightRequest="1" Color="{StaticResource DividerColor}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+
+                    <Label Text="{Binding ResultText}" IsVisible="{Binding ShowRawFallback}" FontSize="10" FontFamily="Courier" LineBreakMode="WordWrap" TextColor="{StaticResource TextPrimary}">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding IsError}" Value="True">
+                                <Setter Property="TextColor" Value="#F7284A" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+        </DataTemplate>
+
+        <views:ConceptCardTemplateSelector x:Key="ConceptCardTemplateSelector"
+            MessageTemplate="{StaticResource MessageCardTemplate}"
+            OrdersTemplate="{StaticResource OrdersCardTemplate}"
+            CountryRevenueTemplate="{StaticResource CountryRevenueCardTemplate}"
+            CountryStatsTemplate="{StaticResource CountryStatsCardTemplate}"
+            RankedOrdersTemplate="{StaticResource RankedOrdersCardTemplate}"
+            EmployeeChainTemplate="{StaticResource EmployeeChainCardTemplate}"
+            CustomerInsightsTemplate="{StaticResource CustomerInsightsCardTemplate}"
+            PivotTemplate="{StaticResource PivotCardTemplate}"
+            UnpivotTemplate="{StaticResource UnpivotCardTemplate}"
+            FacetTemplate="{StaticResource FacetCardTemplate}" />
+    </ContentPage.Resources>
+
     <Grid RowDefinitions="Auto,*">
 
         <VerticalStackLayout Grid.Row="0" Padding="24,20,24,12" Spacing="8">
@@ -25,7 +595,7 @@
                    FontAttributes="Bold"
                    TextColor="{StaticResource TextPrimary}" />
             <Label FontSize="11" TextColor="{StaticResource TextLight}">
-                <Label.Text>One card per SQL interview topic implemented on feature/mongodbnoazure-advanced — tap Run on any card to call the real endpoint against the running backend and see the actual response.</Label.Text>
+                <Label.Text>One card per SQL interview topic implemented on feature/mongodbnoazure-advanced — tap Run on any card to call the real endpoint against the running backend. Each card renders its actual shape (a table, a ranked list, an org chart) rather than raw JSON, except explain() and status messages, which are genuinely better read as text.</Label.Text>
             </Label>
 
             <Button Text="Run all safe reads"
@@ -36,56 +606,9 @@
         </VerticalStackLayout>
 
         <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="24,0,24,24" Spacing="12" BindableLayout.ItemsSource="{Binding Items}">
-                <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="models:ConceptResultItem">
-                        <Border Style="{StaticResource CardBorderStyle}" Padding="16">
-                            <VerticalStackLayout Spacing="8">
-                                <Grid ColumnDefinitions="Auto,*,Auto">
-                                    <Border Grid.Column="0"
-                                            BackgroundColor="{StaticResource PrimaryOrange}"
-                                            Stroke="Transparent"
-                                            StrokeShape="RoundRectangle 3"
-                                            Padding="8,3"
-                                            VerticalOptions="Center">
-                                        <Label Text="{Binding MethodLabel}" FontSize="10" FontAttributes="Bold" TextColor="White" />
-                                    </Border>
-                                    <Label Grid.Column="1"
-                                           Text="{Binding Topic}"
-                                           FontSize="13"
-                                           FontAttributes="Bold"
-                                           VerticalOptions="Center"
-                                           Margin="10,0,0,0"
-                                           TextColor="{StaticResource TextPrimary}" />
-                                    <Button Grid.Column="2"
-                                            Text="Run"
-                                            Command="{Binding RunCommand}"
-                                            FontSize="12"
-                                            Padding="14,6" />
-                                </Grid>
-
-                                <Label Text="{Binding Note}"
-                                       FontSize="10"
-                                       TextColor="{StaticResource TextLight}" />
-
-                                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Start" />
-
-                                <Label Text="{Binding ResultText}"
-                                       FontSize="10"
-                                       FontFamily="Courier"
-                                       LineBreakMode="WordWrap"
-                                       TextColor="{StaticResource TextPrimary}">
-                                    <Label.Triggers>
-                                        <DataTrigger TargetType="Label" Binding="{Binding IsError}" Value="True">
-                                            <Setter Property="TextColor" Value="#F7284A" />
-                                        </DataTrigger>
-                                    </Label.Triggers>
-                                </Label>
-                            </VerticalStackLayout>
-                        </Border>
-                    </DataTemplate>
-                </BindableLayout.ItemTemplate>
-            </VerticalStackLayout>
+            <VerticalStackLayout Padding="24,0,24,24" Spacing="12"
+                                 BindableLayout.ItemsSource="{Binding Items}"
+                                 BindableLayout.ItemTemplateSelector="{StaticResource ConceptCardTemplateSelector}" />
         </ScrollView>
     </Grid>
 </ContentPage>
