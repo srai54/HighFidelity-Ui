@@ -15,16 +15,22 @@ A new sidebar entry, **"Mongo Concepts"** (database icon, bottom of the list) �
 
 ## 2. The 23 cards, what each proves, and any side effects
 
+**Which cards are Views, and which are Stored Procedures — pointed out explicitly, since MongoDB has a real equivalent for one and only an equivalent-in-spirit for the other:**
+
+- **View → card #2 ("Views (`createView`)") only.** This is the one card backed by an actual MongoDB **view object** — `HighValueOrdersView`, created once by the backend via the `createView` command (`MongoDbContext.EnsureIndexesAndViewsAsync` on the backend repo) and then queried by this card **exactly like a normal collection**. A real, first-class database object, same as a SQL view.
+- **Stored Procedure → cards #3 ("'Stored procedure' report") and #6 ("Parameterized 'stored procedure'") only.** MongoDB has **no actual stored-procedure feature** (legacy server-side JS via `db.eval()` was deprecated for security reasons — see the backend's `docs/MONGODB_PERFORMANCE.md`). These two cards are the closest equivalent: report logic expressed as an **aggregation pipeline**, run from application code on demand instead of stored inside the database. Card #6 is the more convincing one — it actually takes runtime parameters (`country`, `topN`), the way a real `sp_TopOrdersByCountry(@Country, @TopN)` would.
+- Every other card is a different SQL concept entirely (joins, subqueries, window functions, PIVOT, transactions, etc.) — none of the remaining 20 are Views or Stored Procedures, even though a few sound adjacent (`$facet` is the CTE equivalent, not a stored procedure; the MERGE/snapshot cards are the temp-table equivalent, not a view — a view is never materialized, and the snapshot collection very much is).
+
 | # | Topic | Method | Side effects |
 |---|---|---|---|
 | 1 | Joins (`$lookup`) | GET | none |
-| 2 | Views (`createView`) | GET | none |
-| 3 | "Stored procedure" report | GET | none |
+| 2 | **Views** (`createView`) | GET | none |
+| 3 | **"Stored procedure"** report | GET | none |
 | 3/15 | GROUP BY + HAVING | GET | none |
 | 4 | Index + `explain()` | GET | none |
 | 5 | Constraints (`$jsonSchema`) | POST | Sends an invalid `Status` on purpose — rejected before it reaches MongoDB, by the same app-layer validation `orders-with-integrity-check` always runs (**not** actually a demo of the DB-level `$jsonSchema` check firing — see the card's own note text for why) |
 | 6 | Aggregate functions | GET | none |
-| 6 | Parameterized "stored procedure" | GET | none |
+| 6 | Parameterized **"stored procedure"** | GET | none |
 | 7 | Window functions + CASE + UDF | GET | none |
 | 8 | `$facet` (CTE equivalent) | GET | none |
 | 9 | Recursive CTE — walk up | GET | none |
