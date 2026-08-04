@@ -105,13 +105,27 @@ public static class MauiProgram
         // ApiDashboardDataService's try/catch, which is why this failed silently
         // with blank data instead of a visible error).
         var authTokenHandler = new AuthTokenHandler(authHttpClient) { InnerHandler = new HttpClientHandler() };
-        builder.Services.AddSingleton<IDashboardDataService>(_ =>
-            new ApiDashboardDataService(new HttpClient(authTokenHandler)
-            {
-                BaseAddress = new Uri(ApiSettings.BaseAddress),
-                Timeout = ApiSettings.RequestTimeout
-            }));
+        // Shared by both services below so there's only ever one AuthTokenHandler
+        // (one login flow) — a second HttpClient(authTokenHandler) would attach
+        // the same handler instance to two clients, which is fine for reads but
+        // means every additional client shares one shared token cache anyway,
+        // so there's no reason not to just share the HttpClient itself.
+        var authenticatedHttpClient = new HttpClient(authTokenHandler)
+        {
+            BaseAddress = new Uri(ApiSettings.BaseAddress),
+            Timeout = ApiSettings.RequestTimeout
+        };
+        builder.Services.AddSingleton<IDashboardDataService>(_ => new ApiDashboardDataService(authenticatedHttpClient));
         builder.Services.AddSingleton<IPrintService, PrintService>();
+
+        // MongoDB-concepts demo page (feature/mongo-fe-implementation) — calls
+        // HighFidelity-Api's feature/mongodbnoazure-advanced ReportsController
+        // endpoints directly and displays the raw response, to visually prove
+        // each SQL-interview-topic implementation actually works. See that
+        // repo's docs/MONGODB_ADVANCED_FEATURES.md for the backend-side writeup.
+        builder.Services.AddSingleton<IApiProbeService>(_ => new ApiProbeService(authenticatedHttpClient));
+        builder.Services.AddTransient<MongoConceptsViewModel>();
+        builder.Services.AddTransient<MongoConceptsPage>();
 
         builder.Services.AddSingleton<MainViewModel>();
         builder.Services.AddSingleton<MainPage>();

@@ -37,6 +37,8 @@ public partial class MainPage : ContentPage
             await Shell.Current.GoToAsync("detail?title=Widgets");
         if (Environment.GetEnvironmentVariable("DASH_TEST_PRINT") == "1")
             await _viewModel.PrintOrdersCommand.ExecuteAsync(null);
+        if (Environment.GetEnvironmentVariable("DASH_TEST_MONGO") == "1")
+            await Shell.Current.GoToAsync("mongo-concepts");
     }
 
     private void OnMenuClicked(object? sender, EventArgs e)

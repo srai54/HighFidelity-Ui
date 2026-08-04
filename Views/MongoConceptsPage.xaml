@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:HighFidelity.Ui.ViewModels"
+             xmlns:models="clr-namespace:HighFidelity.Ui.Models"
+             x:Class="HighFidelity.Ui.Views.MongoConceptsPage"
+             x:DataType="vm:MongoConceptsViewModel"
+             BackgroundColor="{StaticResource PageBackground}"
+             Shell.NavBarIsVisible="False"
+             Title="{Binding Title}">
+    <Grid RowDefinitions="Auto,*">
+
+        <VerticalStackLayout Grid.Row="0" Padding="24,20,24,12" Spacing="8">
+            <HorizontalStackLayout Spacing="4">
+                <Button Text="← Back to Dashboard"
+                        Clicked="OnBackClicked"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource PrimaryOrange}"
+                        FontSize="13"
+                        Padding="0" />
+            </HorizontalStackLayout>
+
+            <Label Text="MongoDB Concepts"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource TextPrimary}" />
+            <Label FontSize="11" TextColor="{StaticResource TextLight}">
+                <Label.Text>One card per SQL interview topic implemented on feature/mongodbnoazure-advanced — tap Run on any card to call the real endpoint against the running backend and see the actual response.</Label.Text>
+            </Label>
+
+            <Button Text="Run all safe reads"
+                    Command="{Binding RunAllSafeCommand}"
+                    Style="{StaticResource PrimaryButton}"
+                    HorizontalOptions="Start"
+                    Margin="0,8,0,0" />
+        </VerticalStackLayout>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="24,0,24,24" Spacing="12" BindableLayout.ItemsSource="{Binding Items}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="models:ConceptResultItem">
+                        <Border Style="{StaticResource CardBorderStyle}" Padding="16">
+                            <VerticalStackLayout Spacing="8">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <Border Grid.Column="0"
+                                            BackgroundColor="{StaticResource PrimaryOrange}"
+                                            Stroke="Transparent"
+                                            StrokeShape="RoundRectangle 3"
+                                            Padding="8,3"
+                                            VerticalOptions="Center">
+                                        <Label Text="{Binding MethodLabel}" FontSize="10" FontAttributes="Bold" TextColor="White" />
+                                    </Border>
+                                    <Label Grid.Column="1"
+                                           Text="{Binding Topic}"
+                                           FontSize="13"
+                                           FontAttributes="Bold"
+                                           VerticalOptions="Center"
+                                           Margin="10,0,0,0"
+                                           TextColor="{StaticResource TextPrimary}" />
+                                    <Button Grid.Column="2"
+                                            Text="Run"
+                                            Command="{Binding RunCommand}"
+                                            FontSize="12"
+                                            Padding="14,6" />
+                                </Grid>
+
+                                <Label Text="{Binding Note}"
+                                       FontSize="10"
+                                       TextColor="{StaticResource TextLight}" />
+
+                                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HorizontalOptions="Start" />
+
+                                <Label Text="{Binding ResultText}"
+                                       FontSize="10"
+                                       FontFamily="Courier"
+                                       LineBreakMode="WordWrap"
+                                       TextColor="{StaticResource TextPrimary}">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label" Binding="{Binding IsError}" Value="True">
+                                            <Setter Property="TextColor" Value="#F7284A" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

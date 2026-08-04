@@ -111,6 +111,13 @@ public partial class MainViewModel : BaseViewModel
     private async Task NavigateAsync(MenuItemModel? item)
     {
         if (item is null) return;
+
+        if (item.Route == "mongo-concepts")
+        {
+            await Shell.Current.GoToAsync("mongo-concepts");
+            return;
+        }
+
         await Shell.Current.GoToAsync($"detail?title={item.Label}");
     }
 

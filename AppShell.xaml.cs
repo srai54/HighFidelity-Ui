@@ -8,5 +8,6 @@ public partial class AppShell : Shell
 	{
 		InitializeComponent();
 		Routing.RegisterRoute("detail", typeof(DetailPage));
+		Routing.RegisterRoute("mongo-concepts", typeof(MongoConceptsPage));
 	}
 }

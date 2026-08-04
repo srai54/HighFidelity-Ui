@@ -39,6 +39,7 @@ public partial class SidebarView : ContentView
         new() { Label = "Gallery",        Icon = "", Route = "gallery" },        // images
         new() { Label = "Documentation",  Icon = "", Route = "documentation" },  // book
         new() { Label = "Documents",      Icon = "", Route = "documents" },      // paperclip
+        new() { Label = "Mongo Concepts", Icon = "", Route = "mongo-concepts" }, // database
     ];
 
     public SidebarView()
