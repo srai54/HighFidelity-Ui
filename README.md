@@ -17,6 +17,7 @@ Runs on **Windows** and **Android** (iOS/macCatalyst targets included).
 | `feature/offline-demo-fallback` | Frozen checkpoint preserving the last commit with a static/embedded-data implementation (`StaticDashboardDataService`) — a fallback for demoing with no backend running, from before the mainline made the API a hard dependency. |
 | `refactor/generic-chart-architecture` | Frozen checkpoint right after the config-driven chart refactor (`ChartData`/`ChartTheme`/`ChartGeometry` + reusable `IDrawable` chart types) landed — an ancestor of the mainline, not diverged. |
 | `feature/interview-ready-ui` | Reset to the last commit before the Documents upload feature, checkbox column, and Download PDF button were added — kept for MAUI interview prep, showing the original dashboard only. |
+| `feature/mongo-fe-implementation` | Forked from `feature/enterprise-frontend-refactor`. Adds a "Mongo Concepts" page that calls every endpoint on the backend's `feature/mongodbnoazure-advanced` branch live and renders the real response as a typed table — see [docs/MONGO_CONCEPTS_PAGE.md](docs/MONGO_CONCEPTS_PAGE.md). |
 
 ---
 
@@ -128,6 +129,7 @@ Endpoints consumed: `GET/POST/DELETE /api/dashboard/{cards|revenue-cards|activit
 
 - [docs/interview-architecture.md](docs/interview-architecture.md) — architecture walkthrough, data/print flow, design decisions
 - [docs/explanation-video-detailed.md](docs/explanation-video-detailed.md) — detailed explanation video script: intro → all UI features → code flow
+- [docs/MONGO_CONCEPTS_PAGE.md](docs/MONGO_CONCEPTS_PAGE.md) — the "Mongo Concepts" page: what it is, the full 23-card list, architecture, the WinUI crash that was found and fixed, and how to verify it yourself
 
 ## Built With
 
