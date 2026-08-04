@@ -605,10 +605,24 @@
                     Margin="0,8,0,0" />
         </VerticalStackLayout>
 
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="24,0,24,24" Spacing="12"
-                                 BindableLayout.ItemsSource="{Binding Items}"
-                                 BindableLayout.ItemTemplateSelector="{StaticResource ConceptCardTemplateSelector}" />
-        </ScrollView>
+        <!--
+            CollectionView, not BindableLayout — BindableLayout does not virtualize:
+            all 23 cards (and everything inside each, once its rows are populated)
+            would be live native views simultaneously, all the time, whether
+            scrolled into view or not. That's cheap for one card's "Run" but
+            genuinely starves the UI thread when "Run all safe reads" populates
+            ~19 cards with real rows in quick succession — confirmed via Windows'
+            own "Application Hang" event log entries, not just a guess. CollectionView
+            only realizes cards near the viewport and recycles templates as you scroll.
+        -->
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding Items}"
+                        ItemTemplateSelector="{StaticResource ConceptCardTemplateSelector}"
+                        Margin="24,0,24,24"
+                        SelectionMode="None">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="12" />
+            </CollectionView.ItemsLayout>
+        </CollectionView>
     </Grid>
 </ContentPage>

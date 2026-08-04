@@ -53,8 +53,8 @@ A new sidebar entry, **"Mongo Concepts"** (database icon, bottom of the list) �
 ## 3. Architecture — how a card goes from a URL to a rendered table
 
 ```
-MongoConceptsPage.xaml            ← DataTemplateSelector picks ONE table template per card (see §5)
-    ↕ BindableLayout, no code-behind logic
+MongoConceptsPage.xaml            ← CollectionView + DataTemplateSelector: virtualized, one table template per card (see §5)
+    ↕ data binding, no code-behind logic
 MongoConceptsViewModel            ← builds the 23 ConceptResultItem instances, one per endpoint
     ↓ constructor injection
 IApiProbeService / ApiProbeService ← calls the endpoint, returns Result<string> (raw HTTP status + body text)
@@ -99,7 +99,15 @@ The first version of this page used **one** `DataTemplate` for every card, conta
 
 **The fix** (`Views/MongoConceptsPage.xaml.cs` → `ConceptCardTemplateSelector`, a `DataTemplateSelector` subclass): one `DataTemplate` per `ConceptResultKind`, each containing only the ONE table shape that `Kind` needs. `BindableLayout.ItemTemplateSelector` (not `ItemTemplate`) picks the right one per card. This means a card's markup is duplicated across ~10 templates instead of factored once — MAUI has no template-composition mechanism, so this is mechanical but low-risk, since each duplicated block is the exact same markup that was already visually verified working in the single-template version.
 
-**Open item, not silently claimed as fully resolved:** after this fix, `Run`/`Run all safe reads` no longer crash. However, the same native crash still occurred once during *automated* testing while simulating mouse-wheel scroll input (`mouse_event` with `MOUSEEVENTF_WHEEL`) — even after the fix. A keyboard-based scroll test (Page Down, with every other window minimized so nothing could steal the keystrokes) survived cleanly, which points at the synthetic input method itself rather than the app. This was not cleanly proven either way — **scroll through the page yourself with a real mouse/trackpad** to confirm before considering this fully closed.
+**This alone did not fully fix it.** Real usage (not automated testing) still hit a second, different problem: tapping **"Run all safe reads"** made the whole app stop responding — Windows logged it as a genuine `Application Hang` (`Get-WinEvent -LogName Application`, provider `Application Hang`, id `1002`, twice, both timestamped exactly when that button was in use), not a slow network call.
+
+## 5b. The real cause of the hang — and the actual fix
+
+**Root cause:** the outer list of 23 cards used `BindableLayout` (via `BindableLayout.ItemsSource`/`ItemTemplateSelector`) inside a plain `ScrollView`. `BindableLayout` **does not virtualize** — every one of the 23 cards is a live, fully-measured native view all the time, regardless of whether it's scrolled into view. That's cheap when every card is just sitting at "Tap Run to call this endpoint." (a couple of `Label`s each), but "Run all safe reads" populates roughly 19 of those cards with real table rows in quick succession — several with 25–30 rows each. That's several hundred additional native views all appearing in a few seconds, inside a container that never recycles or defers anything. The UI thread fell behind and Windows killed it as unresponsive.
+
+**The fix:** replaced the outer `ScrollView` + `BindableLayout` with a `CollectionView` (`ItemsSource="{Binding Items}"`, `ItemTemplateSelector="{StaticResource ConceptCardTemplateSelector}"`, `LinearItemsLayout` for spacing). `CollectionView` virtualizes natively — only cards near the viewport are realized, and templates are recycled as you scroll, so populating 19 off-screen cards with rows no longer means 19 cards' worth of native views exist simultaneously. The per-card *inner* row lists (Orders, CountryRevenues, etc.) still use `BindableLayout` — left alone deliberately, since each card individually is bounded to a few dozen rows at most, and with the outer list now virtualized, only 2–3 cards' worth of inner rows are ever live at once regardless of how many of the 23 have been run.
+
+**Open item, stated plainly rather than claimed as fully closed:** after this fix, my own repeated automated click-testing (`mouse_event`-based synthetic clicks) still hit a *different*, pre-existing native crash — `Microsoft.UI.Xaml.dll`, exception `0xc000027b`, the same fault address every time, across every version of this page including this one. This exact signature never once appeared in a hang/crash the two of us actually experienced through real interaction — every real-usage failure was the `Application Hang` described above, which this fix directly addresses and which is now confirmed fixed by matching event-log timestamps to the real symptom. The `0xc000027b` crash appears to be specific to synthetic `SendInput`-style mouse events interacting with this WinUI version, not something a real mouse click triggers — but I could not prove that with full certainty. **If you hit an actual crash (not a hang, not "nothing happens") while clicking normally, that's the one thing left to look into — tell me and I'll dig into it specifically**, since I can no longer reproduce it through real-equivalent interaction to diagnose further myself.
 
 ## 6. How to run and verify it yourself
 
