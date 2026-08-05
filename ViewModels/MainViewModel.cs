@@ -27,6 +27,7 @@ public partial class MainViewModel : BaseViewModel
     public ObservableCollection<PageItem> PageNumbers { get; } = [];
     public ObservableCollection<TrafficModel> TrafficSources { get; } = [];
     public ObservableCollection<DocumentModel> Documents { get; } = [];
+    public ObservableCollection<DeadLetterMessageModel> DeadLetterMessages { get; } = [];
 
     public DashboardCard? WalletCard => DashboardCards.ElementAtOrDefault(0);
     public DashboardCard? ReferralCard => DashboardCards.ElementAtOrDefault(1);
@@ -47,6 +48,9 @@ public partial class MainViewModel : BaseViewModel
     [ObservableProperty]
     private string _documentStatusSummary = "";
 
+    [ObservableProperty]
+    private int _deadLetterCount;
+
 #pragma warning disable MVVMTK0045 // ObservableProperty fields not AOT-compatible on WinRT
     [ObservableProperty]
     private string _searchText = string.Empty;
@@ -63,13 +67,16 @@ public partial class MainViewModel : BaseViewModel
         _printService = printService;
         Title = DashboardDisplayTitle;
 
-        // Auto-poll documents every 5 seconds so status badges update in real-time
+        // Auto-poll documents (and dead-letter messages, same cadence — both
+        // are "is document processing healthy" signals) every 5 seconds so
+        // status badges update in real-time
         _documentPollTimer = new Timer(DocumentPollIntervalMs);
         _documentPollTimer.Elapsed += async (_, _) =>
         {
             await MainThread.InvokeOnMainThreadAsync(async () =>
             {
                 await LoadDocumentsAsync();
+                await LoadDeadLetterMessagesAsync();
             });
         };
     }
@@ -94,7 +101,8 @@ public partial class MainViewModel : BaseViewModel
             LoadActivitiesAsync(),
             LoadOrdersAsync(),
             LoadTrafficSourcesAsync(),
-            LoadDocumentsAsync()
+            LoadDocumentsAsync(),
+            LoadDeadLetterMessagesAsync()
         );
 
         IsBusy = false;
@@ -345,6 +353,25 @@ public partial class MainViewModel : BaseViewModel
         if (pending > 0) parts.Add($"{pending} waiting");
         if (failed > 0) parts.Add($"{failed} failed");
         return parts.Count > 0 ? string.Join(", ", parts) : "No documents";
+    }
+
+    // A different signal from ProcessingStatus=="Failed" above: that's a SQL
+    // row this app wrote; this is the Service Bus queue's own view of
+    // messages it gave up on (see docs/BRANCHES.md's ancestor,
+    // HighFidelity-Api's ServiceBusController) — a message can dead-letter
+    // for reasons that have nothing to do with a specific document (e.g. the
+    // document row no longer existing at all).
+    [RelayCommand]
+    private async Task LoadDeadLetterMessagesAsync()
+    {
+        var result = await _dataService.GetDeadLetterMessagesAsync();
+        if (result.IsFailure) return;
+
+        DeadLetterMessages.Clear();
+        foreach (var message in result.Data!)
+            DeadLetterMessages.Add(message);
+
+        DeadLetterCount = DeadLetterMessages.Count;
     }
 
     [RelayCommand]

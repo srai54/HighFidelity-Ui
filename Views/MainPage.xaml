@@ -96,7 +96,8 @@
                     Grid.Row="4"
                     Documents="{Binding Documents}"
                     UploadDocumentCommand="{Binding UploadDocumentCommand}"
-                    DocumentStatusSummary="{Binding DocumentStatusSummary}" />
+                    DocumentStatusSummary="{Binding DocumentStatusSummary}"
+                    DeadLetterCount="{Binding DeadLetterCount}" />
             </VerticalStackLayout>
         </ScrollView>
 

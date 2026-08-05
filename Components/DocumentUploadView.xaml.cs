@@ -15,6 +15,9 @@ public partial class DocumentUploadView : ContentView
     public static readonly BindableProperty DocumentStatusSummaryProperty =
         BindableProperty.Create(nameof(DocumentStatusSummary), typeof(string), typeof(DocumentUploadView), "Ready");
 
+    public static readonly BindableProperty DeadLetterCountProperty =
+        BindableProperty.Create(nameof(DeadLetterCount), typeof(int), typeof(DocumentUploadView), 0);
+
     public ObservableCollection<DocumentModel> Documents
     {
         get => (ObservableCollection<DocumentModel>)GetValue(DocumentsProperty);
@@ -31,6 +34,13 @@ public partial class DocumentUploadView : ContentView
     {
         get => (string)GetValue(DocumentStatusSummaryProperty);
         set => SetValue(DocumentStatusSummaryProperty, value);
+    }
+
+    /// <summary>Count of messages sitting in the backend's Service Bus dead-letter sub-queue — a different signal from any single document's own "Failed" status.</summary>
+    public int DeadLetterCount
+    {
+        get => (int)GetValue(DeadLetterCountProperty);
+        set => SetValue(DeadLetterCountProperty, value);
     }
 
     public DocumentUploadView()

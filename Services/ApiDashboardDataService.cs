@@ -102,6 +102,9 @@ public class ApiDashboardDataService : IDashboardDataService
         }
     }
 
+    public Task<Result<IReadOnlyList<DeadLetterMessageModel>>> GetDeadLetterMessagesAsync() =>
+        GetListAsync<DeadLetterMessageModel>("api/service-bus/dead-letter-messages", "dead-letter messages");
+
     private sealed record DeleteResponse(int Deleted);
 
     private async Task<Result<IReadOnlyList<T>>> GetListAsync<T>(string endpoint, string resourceName)

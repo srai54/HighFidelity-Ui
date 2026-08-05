@@ -21,4 +21,7 @@ public interface IDashboardDataService
 
     /// <summary>Gets all uploaded documents metadata.</summary>
     Task<Result<IReadOnlyList<DocumentModel>>> GetDocumentsAsync();
+
+    /// <summary>Peeks messages currently in the Service Bus dead-letter sub-queue — doesn't remove/lock them, diagnostics only.</summary>
+    Task<Result<IReadOnlyList<DeadLetterMessageModel>>> GetDeadLetterMessagesAsync();
 }

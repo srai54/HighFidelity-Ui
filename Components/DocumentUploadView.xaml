@@ -8,6 +8,7 @@
     <ContentView.Resources>
         <conv:DocumentStatusColorConverter x:Key="StatusColor" />
         <conv:DocumentStatusLabelConverter x:Key="StatusLabel" />
+        <conv:IsGreaterThanZeroConverter x:Key="IsGreaterThanZero" />
     </ContentView.Resources>
     <Border Style="{StaticResource CardBorderStyle}" Padding="16">
         <VerticalStackLayout Spacing="12">
@@ -27,6 +28,28 @@
                        TextColor="{StaticResource TextSecondary}"
                        VerticalOptions="Center" />
             </HorizontalStackLayout>
+
+            <!--
+                A different signal from any single document's own "Failed" status
+                badge below: this counts messages the Service Bus queue itself gave
+                up on (see HighFidelity-Api's ServiceBusController/ServiceBusDeadLetterService).
+                Hidden entirely when there's nothing dead-lettered.
+            -->
+            <Border BackgroundColor="#FFEBEE"
+                    Stroke="Transparent"
+                    StrokeShape="RoundRectangle 4"
+                    Padding="10,6"
+                    IsVisible="{Binding DeadLetterCount, Source={x:Reference DocumentSelf}, Converter={StaticResource IsGreaterThanZero}}">
+                <Label FontSize="11" TextColor="#C62828">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="&#xf071; " FontFamily="FontAwesome" />
+                            <Span Text="{Binding DeadLetterCount, Source={x:Reference DocumentSelf}}" FontAttributes="Bold" />
+                            <Span Text=" message(s) failed delivery and were moved to the dead-letter queue." />
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+            </Border>
 
             <CollectionView ItemsSource="{Binding Documents, Source={x:Reference DocumentSelf}}"
                             HeightRequest="220"
