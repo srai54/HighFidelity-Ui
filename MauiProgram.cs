@@ -105,6 +105,7 @@ public static class MauiProgram
         // ApiDashboardDataService's try/catch, which is why this failed silently
         // with blank data instead of a visible error).
         var authTokenHandler = new AuthTokenHandler(authHttpClient) { InnerHandler = new HttpClientHandler() };
+        builder.Services.AddSingleton(authTokenHandler);
         builder.Services.AddSingleton<IDashboardDataService>(_ =>
             new ApiDashboardDataService(new HttpClient(authTokenHandler)
             {
@@ -112,6 +113,7 @@ public static class MauiProgram
                 Timeout = ApiSettings.RequestTimeout
             }));
         builder.Services.AddSingleton<IPrintService, PrintService>();
+        builder.Services.AddSingleton<IDocumentStatusHubClient, DocumentStatusHubClient>();
 
         builder.Services.AddSingleton<MainViewModel>();
         builder.Services.AddSingleton<MainPage>();

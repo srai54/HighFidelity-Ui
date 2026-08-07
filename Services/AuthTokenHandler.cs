@@ -27,6 +27,13 @@ public class AuthTokenHandler : DelegatingHandler
         return await base.SendAsync(request, cancellationToken);
     }
 
+    // Exposed so other clients that need the same Bearer token but aren't
+    // themselves an HttpClient pipeline (e.g. the SignalR hub connection's
+    // AccessTokenProvider) can reuse this same cached login instead of
+    // re-authenticating separately.
+    public Task<string?> GetValidTokenAsync(CancellationToken cancellationToken = default) =>
+        GetTokenAsync(cancellationToken);
+
     private async Task<string?> GetTokenAsync(CancellationToken cancellationToken)
     {
         if (_token is not null && DateTime.UtcNow < _expiresAtUtc)

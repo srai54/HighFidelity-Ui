@@ -13,9 +13,13 @@ namespace HighFidelity.Ui.ViewModels;
 public partial class MainViewModel : BaseViewModel
 {
     private const int PageSize = 5;
-    private const double DocumentPollIntervalMs = 5000;
+    // Real-time updates now arrive via IDocumentStatusHubClient; this timer is
+    // just a safety net in case the SignalR connection is down, so it can be
+    // much less frequent than the old 5-second poll.
+    private const double DocumentPollIntervalMs = 60_000;
 
     private readonly IDashboardDataService _dataService;
+    private readonly IDocumentStatusHubClient _documentStatusHub;
     private Timer? _documentPollTimer;
     private readonly IPrintService _printService;
     private readonly List<OrderModel> _allOrders = [];
@@ -61,15 +65,26 @@ public partial class MainViewModel : BaseViewModel
 
     private int _currentPage = 1;
 
-    public MainViewModel(IDashboardDataService dataService, IPrintService printService)
+    public MainViewModel(IDashboardDataService dataService, IPrintService printService, IDocumentStatusHubClient documentStatusHub)
     {
         _dataService = dataService;
         _printService = printService;
+        _documentStatusHub = documentStatusHub;
         Title = DashboardDisplayTitle;
 
-        // Auto-poll documents (and dead-letter messages, same cadence — both
-        // are "is document processing healthy" signals) every 5 seconds so
-        // status badges update in real-time
+        // Primary path: push notifications from the API's DocumentStatusHub
+        // (see HighFidelity-Api's DocumentStatusHub/InternalNotificationsController)
+        // fire the instant HighFidelity.Functions finishes a status transition.
+        _documentStatusHub.DocumentStatusChanged += (_, _) =>
+        {
+            MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                await LoadDocumentsAsync();
+                await LoadDeadLetterMessagesAsync();
+            });
+        };
+
+        // Fallback poll only, in case the hub connection is ever down.
         _documentPollTimer = new Timer(DocumentPollIntervalMs);
         _documentPollTimer.Elapsed += async (_, _) =>
         {
@@ -87,6 +102,7 @@ public partial class MainViewModel : BaseViewModel
         await LoadDataCommand.ExecuteAsync(null);
         IsDataLoaded = true;
         _documentPollTimer?.Start();
+        await _documentStatusHub.StartAsync();
     }
 
     [RelayCommand]
