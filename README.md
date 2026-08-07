@@ -29,6 +29,9 @@ All four above are kept intentionally — do not delete or repurpose them.
 | `feature/interview-ready-ui` | Reset to the last commit before the Documents upload feature, checkbox column, and Download PDF button were added — kept for MAUI interview prep, showing the original dashboard only. Kept intentionally, do not modify or delete. |
 | `feature/interview-standalone` | Hardcoded/standalone data source for interview demos — needs nothing else running. Kept intentionally, do not modify or delete. |
 | `feature/mongo-fe-implementation` | Forked from `feature/enterprise-frontend-refactor`. Adds a "Mongo Concepts" page that calls every endpoint on the backend's `feature/mongodbnoazure-advanced` branch live and renders the real response as a typed table — see [docs/MONGO_CONCEPTS_PAGE.md](docs/MONGO_CONCEPTS_PAGE.md). |
+| `feature/fe-be-testing` | Forked from this branch, 2026-08-07. Adds `HighFidelity.Ui.Tests` (xUnit + Moq), the first test project in this repo — covers `MainViewModel` against a mocked `IDashboardDataService`. |
+| `feature/signalr-realtime` | Forked from this branch, 2026-08-07. Adds a SignalR client (`DocumentStatusHubClient`) that replaces the old 5-second document-status poll with a real push from the API's new hub; poll timer becomes a 60s fallback only. |
+| `feature/dashboard-enhancements` | Forked from this branch, 2026-08-07. Adds dark mode (live-toggle via `AppThemeBinding`, switch at the bottom of the sidebar), toast notifications on upload success, shimmer skeleton loaders on the KPI/analytics rows, and `SqliteOfflineCacheDataService` — a local offline cache decorator around `IDashboardDataService`. |
 
 ---
 
