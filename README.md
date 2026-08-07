@@ -17,6 +17,7 @@ Runs on **Windows** and **Android** (iOS/macCatalyst targets included).
 | `feature/offline-demo-fallback` | Frozen checkpoint preserving the last commit with a static/embedded-data implementation (`StaticDashboardDataService`) — a fallback for demoing with no backend running, from before the mainline made the API a hard dependency. |
 | `refactor/generic-chart-architecture` | Frozen checkpoint right after the config-driven chart refactor (`ChartData`/`ChartTheme`/`ChartGeometry` + reusable `IDrawable` chart types) landed — an ancestor of the mainline, not diverged. |
 | `feature/interview-ready-ui` | Reset to the last commit before the Documents upload feature, checkbox column, and Download PDF button were added — kept for MAUI interview prep, showing the original dashboard only. |
+| `feature/dashboard-ui-polish` | Forked from `feature/enterprise-frontend-refactor`. Moves the Documents card (upload button + list) out of its buried spot at the bottom of the dashboard to the second row, fixes a broken FontAwesome icon+text rendering bug on the Upload Document button, and adds per-file-type icons to the document list. Visual only — no ViewModel/backend changes. |
 
 ---
 
