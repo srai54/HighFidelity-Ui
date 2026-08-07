@@ -6,7 +6,7 @@
              xmlns:models="clr-namespace:HighFidelity.Ui.Models"
              x:Class="HighFidelity.Ui.Views.MainPage"
              x:DataType="vm:MainViewModel"
-             BackgroundColor="{StaticResource PageBackground}"
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageBackground}, Dark={StaticResource PageBackgroundDark}}"
              Shell.NavBarIsVisible="False"
              Title="Dashboard">
     <Grid x:Name="RootGrid" ColumnDefinitions="200,*">
@@ -23,20 +23,30 @@
                                 <components:DashboardHeaderView />
                                 <components:SalesChartView x:Name="ChartView" Grid.Column="1" />
                             </Grid>
-                            <BoxView Grid.Row="1" HeightRequest="1" Color="{StaticResource DividerColor}" />
+                            <BoxView Grid.Row="1" HeightRequest="1" Color="{AppThemeBinding Light={StaticResource DividerColor}, Dark={StaticResource DividerColorDark}}" />
                             <Grid x:Name="SummaryStrip"
                                   Grid.Row="2"
                                   ColumnDefinitions="*,1,*,1,*,1,*"
                                   RowSpacing="16"
                                   Padding="20,16">
                                 <components:SummaryCardView x:Name="SummaryWallet" BindingContext="{Binding WalletCard}" />
-                                <BoxView x:Name="SummaryDiv1" Grid.Column="1" WidthRequest="1" Color="{StaticResource DividerColor}" />
+                                <BoxView x:Name="SummaryDiv1" Grid.Column="1" WidthRequest="1" Color="{AppThemeBinding Light={StaticResource DividerColor}, Dark={StaticResource DividerColorDark}}" />
                                 <components:SummaryCardView x:Name="SummaryReferral" Grid.Column="2" Margin="18,0,0,0" BindingContext="{Binding ReferralCard}" />
-                                <BoxView x:Name="SummaryDiv2" Grid.Column="3" WidthRequest="1" Color="{StaticResource DividerColor}" />
+                                <BoxView x:Name="SummaryDiv2" Grid.Column="3" WidthRequest="1" Color="{AppThemeBinding Light={StaticResource DividerColor}, Dark={StaticResource DividerColorDark}}" />
                                 <components:SummaryCardView x:Name="SummaryEstimate" Grid.Column="4" Margin="18,0,0,0" BindingContext="{Binding EstimateCard}" />
-                                <BoxView x:Name="SummaryDiv3" Grid.Column="5" WidthRequest="1" Color="{StaticResource DividerColor}" />
+                                <BoxView x:Name="SummaryDiv3" Grid.Column="5" WidthRequest="1" Color="{AppThemeBinding Light={StaticResource DividerColor}, Dark={StaticResource DividerColorDark}}" />
                                 <components:SummaryCardView x:Name="SummaryEarning" Grid.Column="6" Margin="18,0,0,0" BindingContext="{Binding EarningCard}" />
                             </Grid>
+
+                            <!-- Shimmer skeleton, drawn over SummaryStrip while its data is
+                                 still loading (opaque placeholders, so nothing behind shows through). -->
+                            <HorizontalStackLayout Grid.Row="2" Spacing="18" Padding="20,16"
+                                                   IsVisible="{Binding IsBusy}">
+                                <components:ShimmerBoxView WidthRequest="140" HeightRequest="36" />
+                                <components:ShimmerBoxView WidthRequest="140" HeightRequest="36" />
+                                <components:ShimmerBoxView WidthRequest="140" HeightRequest="36" />
+                                <components:ShimmerBoxView WidthRequest="140" HeightRequest="36" />
+                            </HorizontalStackLayout>
                         </Grid>
                     </Border>
                     <components:TrafficChartView x:Name="TrafficChart" Grid.Column="1" ItemsSource="{Binding TrafficSources}" />
@@ -83,6 +93,12 @@
                         ChartType="{Binding RevenueStatusAltCard.ChartType}"
                         CardBackground="{Binding RevenueStatusAltCard.BackgroundHex, Converter={StaticResource HexToColorConverter}}"
                         AccentColor="{Binding RevenueStatusAltCard.AccentHex, Converter={StaticResource HexToColorConverter}}" />
+
+                    <!-- Shimmer skeleton for the analytics row while its data loads. -->
+                    <components:ShimmerBoxView IsVisible="{Binding IsBusy}" HeightRequest="110" />
+                    <components:ShimmerBoxView Grid.Column="1" IsVisible="{Binding IsBusy}" HeightRequest="110" />
+                    <components:ShimmerBoxView Grid.Column="2" IsVisible="{Binding IsBusy}" HeightRequest="110" />
+                    <components:ShimmerBoxView Grid.Column="3" IsVisible="{Binding IsBusy}" HeightRequest="110" />
                 </Grid>
 
                 <!-- Row 3: Recent Activities + Order Status -->
@@ -107,9 +123,9 @@
                 Text="&#xf0c9;"
                 FontFamily="FontAwesome"
                 FontSize="16"
-                TextColor="{StaticResource TextPrimary}"
-                BackgroundColor="White"
-                BorderColor="{StaticResource DividerColor}"
+                TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}"
+                BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource CardBackgroundDark}}"
+                BorderColor="{AppThemeBinding Light={StaticResource DividerColor}, Dark={StaticResource DividerColorDark}}"
                 BorderWidth="1"
                 CornerRadius="6"
                 WidthRequest="40"

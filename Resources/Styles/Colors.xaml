@@ -22,6 +22,21 @@
     <Color x:Key="TextLight">#9AA3B7</Color>
     <Color x:Key="TextWhite">#FFFFFF</Color>
 
+    <!-- Dark mode variants — layout/text/surface colors only. Brand accents,
+         revenue-card colors, and status colors stay identical in both themes
+         (brand consistency), so they have no *Dark counterpart. Consumed via
+         AppThemeBinding at each usage site in Styles.xaml/MainPage.xaml. -->
+    <Color x:Key="PageBackgroundDark">#121826</Color>
+    <Color x:Key="CardBackgroundDark">#1B2333</Color>
+    <Color x:Key="TextPrimaryDark">#ECEFF4</Color>
+    <Color x:Key="TextSecondaryDark">#A9B2C3</Color>
+    <Color x:Key="TextLightDark">#8891A5</Color>
+    <Color x:Key="BorderColorDark">#2A3346</Color>
+    <Color x:Key="DividerColorDark">#262F42</Color>
+    <Color x:Key="TableHeaderBgDark">#202A3D</Color>
+    <Color x:Key="IconButtonBgDark">#232C3F</Color>
+    <Color x:Key="IconButtonTextDark">#C3CADC</Color>
+
     <!-- Chart palette lives in Charts/ChartTheme.cs (single source for XAML + drawables). -->
 
     <Color x:Key="StatusProcess">#F7284A</Color>

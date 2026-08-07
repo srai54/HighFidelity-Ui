@@ -106,11 +106,12 @@ public static class MauiProgram
         // with blank data instead of a visible error).
         var authTokenHandler = new AuthTokenHandler(authHttpClient) { InnerHandler = new HttpClientHandler() };
         builder.Services.AddSingleton<IDashboardDataService>(_ =>
-            new ApiDashboardDataService(new HttpClient(authTokenHandler)
-            {
-                BaseAddress = new Uri(ApiSettings.BaseAddress),
-                Timeout = ApiSettings.RequestTimeout
-            }));
+            new SqliteOfflineCacheDataService(
+                new ApiDashboardDataService(new HttpClient(authTokenHandler)
+                {
+                    BaseAddress = new Uri(ApiSettings.BaseAddress),
+                    Timeout = ApiSettings.RequestTimeout
+                })));
         builder.Services.AddSingleton<IPrintService, PrintService>();
 
         builder.Services.AddSingleton<MainViewModel>();

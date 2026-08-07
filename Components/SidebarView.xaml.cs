@@ -44,6 +44,7 @@ public partial class SidebarView : ContentView
     public SidebarView()
     {
         InitializeComponent();
+        UpdateThemeToggleLabel();
     }
 
     /// <summary>
@@ -52,4 +53,21 @@ public partial class SidebarView : ContentView
     /// </summary>
     public void SetTopInset(double inset)
         => MenuStack.Padding = new Thickness(0, 10 + inset, 0, 10);
+
+    private void OnThemeToggleTapped(object? sender, TappedEventArgs e)
+    {
+        var app = Application.Current;
+        if (app is null) return;
+
+        var isDark = app.RequestedTheme == AppTheme.Dark;
+        app.UserAppTheme = isDark ? AppTheme.Light : AppTheme.Dark;
+        UpdateThemeToggleLabel();
+    }
+
+    private void UpdateThemeToggleLabel()
+    {
+        var isDark = Application.Current?.RequestedTheme == AppTheme.Dark;
+        ThemeToggleLabel.Text = isDark ? "Light Mode" : "Dark Mode";
+        ThemeToggleIcon.Text = isDark ? "" : ""; // sun / moon
+    }
 }

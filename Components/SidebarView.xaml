@@ -5,45 +5,68 @@
              x:Class="HighFidelity.Ui.Components.SidebarView"
              x:Name="SidebarSelf"
              BackgroundColor="{StaticResource SidebarColor}">
-    <ScrollView VerticalScrollBarVisibility="Never">
-        <VerticalStackLayout x:Name="MenuStack"
-                             Padding="0,10"
-                             Spacing="0"
-                             BindableLayout.ItemsSource="{Binding MenuItems, Source={x:Reference SidebarSelf}}">
-            <BindableLayout.ItemTemplate>
-                <DataTemplate x:DataType="models:MenuItemModel">
-                    <Grid ColumnDefinitions="26,*"
-                          Padding="22,11"
-                          BackgroundColor="Transparent">
-                        <Label Text="{Binding Icon}"
-                               FontFamily="FontAwesome"
-                               FontSize="11"
-                               TextColor="{StaticResource SidebarIcon}"
-                               VerticalOptions="Center">
-                            <Label.Triggers>
-                                <DataTrigger TargetType="Label" Binding="{Binding IsActive}" Value="True">
-                                    <Setter Property="TextColor" Value="White" />
-                                </DataTrigger>
-                            </Label.Triggers>
-                        </Label>
-                        <Label Grid.Column="1"
-                               Text="{Binding Label}"
-                               FontSize="12"
-                               TextColor="{StaticResource SidebarText}"
-                               VerticalOptions="Center">
-                            <Label.Triggers>
-                                <DataTrigger TargetType="Label" Binding="{Binding IsActive}" Value="True">
-                                    <Setter Property="TextColor" Value="White" />
-                                </DataTrigger>
-                            </Label.Triggers>
-                        </Label>
-                        <Grid.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding SelectItemCommand, Source={x:Reference SidebarSelf}}"
-                                                  CommandParameter="{Binding .}" />
-                        </Grid.GestureRecognizers>
-                    </Grid>
-                </DataTemplate>
-            </BindableLayout.ItemTemplate>
-        </VerticalStackLayout>
-    </ScrollView>
+    <Grid RowDefinitions="*,Auto">
+        <ScrollView VerticalScrollBarVisibility="Never">
+            <VerticalStackLayout x:Name="MenuStack"
+                                 Padding="0,10"
+                                 Spacing="0"
+                                 BindableLayout.ItemsSource="{Binding MenuItems, Source={x:Reference SidebarSelf}}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="models:MenuItemModel">
+                        <Grid ColumnDefinitions="26,*"
+                              Padding="22,11"
+                              BackgroundColor="Transparent">
+                            <Label Text="{Binding Icon}"
+                                   FontFamily="FontAwesome"
+                                   FontSize="11"
+                                   TextColor="{StaticResource SidebarIcon}"
+                                   VerticalOptions="Center">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label" Binding="{Binding IsActive}" Value="True">
+                                        <Setter Property="TextColor" Value="White" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                            <Label Grid.Column="1"
+                                   Text="{Binding Label}"
+                                   FontSize="12"
+                                   TextColor="{StaticResource SidebarText}"
+                                   VerticalOptions="Center">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label" Binding="{Binding IsActive}" Value="True">
+                                        <Setter Property="TextColor" Value="White" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectItemCommand, Source={x:Reference SidebarSelf}}"
+                                                      CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Theme toggle: flips Application.Current.UserAppTheme between Light/Dark.
+             Purely a UI concern (no ViewModel involvement needed), so it's handled
+             in code-behind like the rest of this view's visual-only logic. -->
+        <Grid Grid.Row="1" ColumnDefinitions="26,*" Padding="22,14" BackgroundColor="Transparent">
+            <Label x:Name="ThemeToggleIcon"
+                   Text="&#xf186;"
+                   FontFamily="FontAwesome"
+                   FontSize="12"
+                   TextColor="{StaticResource SidebarIcon}"
+                   VerticalOptions="Center" />
+            <Label x:Name="ThemeToggleLabel"
+                   Grid.Column="1"
+                   Text="Dark Mode"
+                   FontSize="12"
+                   TextColor="{StaticResource SidebarText}"
+                   VerticalOptions="Center" />
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnThemeToggleTapped" />
+            </Grid.GestureRecognizers>
+        </Grid>
+    </Grid>
 </ContentView>

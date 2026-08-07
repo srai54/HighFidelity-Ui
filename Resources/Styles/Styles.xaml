@@ -5,11 +5,11 @@
 
     <!-- Card with Shadow -->
     <Style x:Key="CardBorderStyle" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource CardBackground}, Dark={StaticResource CardBackgroundDark}}" />
         <Setter Property="StrokeShape" Value="RoundRectangle 6" />
         <Setter Property="Padding" Value="20" />
         <Setter Property="Margin" Value="0" />
-        <Setter Property="Stroke" Value="{StaticResource BorderColor}" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource BorderColor}, Dark={StaticResource BorderColorDark}}" />
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="Shadow">
             <Setter.Value>
@@ -22,7 +22,7 @@
     <Style x:Key="DisplayTitle" TargetType="Label">
         <Setter Property="FontSize" Value="24" />
         <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
     </Style>
 
     <!-- Typography: Section Title (chart titles, card section headers).
@@ -30,33 +30,33 @@
     <Style x:Key="SectionTitle" TargetType="Label">
         <Setter Property="FontSize" Value="15" />
         <Setter Property="FontFamily" Value="OpenSansSemibold" />
-        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
     </Style>
 
     <!-- Typography: Card Title (inside cards) -->
     <Style x:Key="CardTitle" TargetType="Label">
         <Setter Property="FontSize" Value="11" />
-        <Setter Property="TextColor" Value="{StaticResource TextLight}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextLightDark}}" />
     </Style>
 
     <!-- Typography: Metric Value (large numbers) -->
     <Style x:Key="MetricValue" TargetType="Label">
         <Setter Property="FontSize" Value="15" />
         <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
         <Setter Property="LineBreakMode" Value="NoWrap" />
     </Style>
 
     <!-- Typography: Caption Text (small labels) -->
     <Style x:Key="CaptionText" TargetType="Label">
         <Setter Property="FontSize" Value="10" />
-        <Setter Property="TextColor" Value="{StaticResource TextLight}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextLightDark}}" />
     </Style>
 
     <!-- Section Subtitle -->
     <Style x:Key="SectionSubtitle" TargetType="Label">
         <Setter Property="FontSize" Value="10" />
-        <Setter Property="TextColor" Value="{StaticResource TextLight}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextLightDark}}" />
     </Style>
 
     <!-- Tab Active Style -->
@@ -72,7 +72,7 @@
     <Style x:Key="TabInactiveStyle" TargetType="Label">
         <Setter Property="FontSize" Value="11" />
         <Setter Property="CharacterSpacing" Value="0.5" />
-        <Setter Property="TextColor" Value="{StaticResource TextLight}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextLightDark}}" />
         <Setter Property="VerticalOptions" Value="Center" />
     </Style>
 
@@ -91,14 +91,14 @@
         <Setter Property="FontSize" Value="10" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="CharacterSpacing" Value="0.6" />
-        <Setter Property="TextColor" Value="#4B5574" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#4B5574, Dark={StaticResource TextPrimaryDark}}" />
     </Style>
 
     <!-- Pagination number: plain text at rest, circle appears on hover.
          The current page keeps its orange circle via a DataTrigger. -->
     <Style x:Key="PaginationButton" TargetType="Button">
         <Setter Property="FontSize" Value="11" />
-        <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
         <Setter Property="BackgroundColor" Value="Transparent" />
         <Setter Property="BorderColor" Value="Transparent" />
         <Setter Property="BorderWidth" Value="0" />
@@ -129,8 +129,8 @@
 
     <!-- Rectangular toolbar icon button (Order Status card) -->
     <Style x:Key="IconButton" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="{StaticResource IconButtonBg}" />
-        <Setter Property="TextColor" Value="{StaticResource IconButtonText}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource IconButtonBg}, Dark={StaticResource IconButtonBgDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource IconButtonText}, Dark={StaticResource IconButtonTextDark}}" />
         <Setter Property="WidthRequest" Value="44" />
         <Setter Property="HeightRequest" Value="32" />
         <Setter Property="CornerRadius" Value="4" />
@@ -146,8 +146,8 @@
                 <VisualStateGroup x:Name="CommonStates">
                     <VisualState x:Name="Normal">
                         <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="{StaticResource IconButtonBg}" />
-                            <Setter Property="TextColor" Value="{StaticResource IconButtonText}" />
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource IconButtonBg}, Dark={StaticResource IconButtonBgDark}}" />
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource IconButtonText}, Dark={StaticResource IconButtonTextDark}}" />
                         </VisualState.Setters>
                     </VisualState>
                     <VisualState x:Name="PointerOver">
@@ -173,8 +173,8 @@
                 <VisualStateGroup x:Name="CommonStates">
                     <VisualState x:Name="Normal">
                         <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="{StaticResource IconButtonBg}" />
-                            <Setter Property="TextColor" Value="{StaticResource IconButtonText}" />
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource IconButtonBg}, Dark={StaticResource IconButtonBgDark}}" />
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource IconButtonText}, Dark={StaticResource IconButtonTextDark}}" />
                         </VisualState.Setters>
                     </VisualState>
                     <VisualState x:Name="PointerOver">
@@ -200,8 +200,8 @@
                 <VisualStateGroup x:Name="CommonStates">
                     <VisualState x:Name="Normal">
                         <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="{StaticResource IconButtonBg}" />
-                            <Setter Property="TextColor" Value="{StaticResource IconButtonText}" />
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource IconButtonBg}, Dark={StaticResource IconButtonBgDark}}" />
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource IconButtonText}, Dark={StaticResource IconButtonTextDark}}" />
                         </VisualState.Setters>
                     </VisualState>
                     <VisualState x:Name="PointerOver">

@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Timers;
+using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Maui.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -311,10 +313,9 @@ public partial class MainViewModel : BaseViewModel
 
             Documents.Insert(0, result.Data!);
 
-            await Shell.Current.DisplayAlertAsync(
-                "Upload Successful",
-                $"\"{fileResult.FileName}\" uploaded successfully.",
-                "OK");
+            // Toast instead of a blocking alert — a successful upload doesn't
+            // need acknowledgment, unlike the failure paths below.
+            await Toast.Make($"\"{fileResult.FileName}\" uploaded successfully.", ToastDuration.Short).Show();
         }
         catch (Exception ex)
         {
