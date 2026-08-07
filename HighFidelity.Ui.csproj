@@ -42,6 +42,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<!-- The test project lives in a sibling folder under this same project root
+		     (MAUI SingleProject apps don't use a .sln-per-folder layout), so the SDK's
+		     default recursive glob would otherwise try to compile it into this app too. -->
+		<Compile Remove="HighFidelity.Ui.Tests\**\*.cs" />
+		<None Remove="HighFidelity.Ui.Tests\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
 

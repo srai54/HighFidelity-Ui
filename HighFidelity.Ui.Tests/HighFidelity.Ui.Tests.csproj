@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Same TFM as one of HighFidelity.Ui's targets (not plain net10.0) so the
+         ProjectReference below resolves — MAUI SingleProject apps only publish
+         platform TFMs. This runs as an ordinary desktop console test host; no
+         emulator/device and no MAUI UI bootstrap involved. -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <UseMaui>false</UseMaui>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HighFidelity.Ui.csproj" />
+  </ItemGroup>
+
+  <!-- Microsoft.Maui.Resizetizer's build/buildTransitive targets flow in through the
+       ProjectReference above (its assets aren't marked private in Microsoft.Maui.Controls)
+       and re-run image processing in this project's context too, tripping a duplicate-
+       filename check against Ui's own AppIcon. This project never renders UI, so the
+       resizetizer step is pure overhead here — turn it off explicitly. -->
+  <ItemGroup>
+    <MauiIcon Remove="@(MauiIcon)" />
+    <MauiImage Remove="@(MauiImage)" />
+    <MauiSplashScreen Remove="@(MauiSplashScreen)" />
+    <MauiFont Remove="@(MauiFont)" />
+    <MauiAsset Remove="@(MauiAsset)" />
+  </ItemGroup>
+
+  <Target Name="SkipResizetizeInTests" BeforeTargets="ResizetizeImages;ResizetizeSplashScreen">
+    <ItemGroup>
+      <MauiIcon Remove="@(MauiIcon)" />
+      <MauiImage Remove="@(MauiImage)" />
+      <MauiSplashScreen Remove="@(MauiSplashScreen)" />
+    </ItemGroup>
+  </Target>
+
+</Project>
