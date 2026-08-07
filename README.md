@@ -8,15 +8,27 @@ Runs on **Windows** and **Android** (iOS/macCatalyst targets included).
 
 ## Branches
 
+**2026-08-07 cleanup:** removed `feature/backend-api-integration`, `feature/offline-demo-fallback`, `refactor/generic-chart-architecture`, and `backend-split` — all fully merged/superseded, 0 unique commits ahead of this branch (or, for `offline-demo-fallback`, functionally replaced by `feature/interview-standalone` below).
+
+### The scenario matrix
+
+| Scenario | Branch(es) needed | What it needs |
+|---|---|---|
+| Interview demo (actual need) | `feature/interview-standalone` (frontend only) | Nothing — just run it |
+| Live full-stack demo (backup) | `feature/interview-ready-ui` + `feature/interview-ready-api` (HighFidelity-Api repo) | Both repos running, no Azure |
+| Normal ongoing development | `feature/enterprise-frontend-refactor` (this) + `highfidelity-backend` (HighFidelity-Api repo) | SQL Server, full Azure stack |
+| Mongo demo | `feature/mongo-fe-implementation` (this) + `feature/mongodbnoazure-advanced` (HighFidelity-Api repo) | MongoDB, no Azure |
+
+All four above are kept intentionally — do not delete or repurpose them.
+
 | Branch | Purpose |
 |---|---|
 | `feature/enterprise-frontend-refactor` | **Active development line.** Enterprise EF Core backend integration, JWT auth, Documents upload feature, generic chart architecture. |
+| `feature/dashboard-ui-polish` | Forked from this branch. Moves the Documents card up out of the buried bottom-of-page slot, fixes a broken FontAwesome icon+text button rendering bug, adds file-type icons to the document list. Visual only. |
 | `master` | GitHub's default branch. Frozen at the original pre-refactor static-data build (23 commits behind) — a historical checkpoint, not kept in sync. |
-| `feature/backend-api-integration` | Historical — added the first Dapper/SQL LocalDB backend and wired the app to a live API. Fully superseded, an ancestor of the current mainline. |
-| `backend-split` | Historical — a 4-commit, path-rewritten extraction of just the backend code, used to bootstrap the standalone [HighFidelity-Api](https://github.com/srai54/HighFidelity-Api) repo. An orphaned snapshot, disjoint from this repo's main history. |
-| `feature/offline-demo-fallback` | Frozen checkpoint preserving the last commit with a static/embedded-data implementation (`StaticDashboardDataService`) — a fallback for demoing with no backend running, from before the mainline made the API a hard dependency. |
-| `refactor/generic-chart-architecture` | Frozen checkpoint right after the config-driven chart refactor (`ChartData`/`ChartTheme`/`ChartGeometry` + reusable `IDrawable` chart types) landed — an ancestor of the mainline, not diverged. |
-| `feature/interview-ready-ui` | Reset to the last commit before the Documents upload feature, checkbox column, and Download PDF button were added — kept for MAUI interview prep, showing the original dashboard only. |
+| `feature/interview-ready-ui` | Reset to the last commit before the Documents upload feature, checkbox column, and Download PDF button were added — kept for MAUI interview prep, showing the original dashboard only. Kept intentionally, do not modify or delete. |
+| `feature/interview-standalone` | Hardcoded/standalone data source for interview demos — needs nothing else running. Kept intentionally, do not modify or delete. |
+| `feature/mongo-fe-implementation` | Forked from `feature/enterprise-frontend-refactor`. Adds a "Mongo Concepts" page that calls every endpoint on the backend's `feature/mongodbnoazure-advanced` branch live and renders the real response as a typed table — see [docs/MONGO_CONCEPTS_PAGE.md](docs/MONGO_CONCEPTS_PAGE.md). |
 
 ---
 
@@ -66,7 +78,7 @@ HighFidelity.Ui/
 > sqlcmd -S "(localdb)\MSSQLLocalDB" -d HighFidelity -i HighFidelity-Api\database\seed.sql
 > dotnet run --project HighFidelity-Api\HighFidelity.Api
 > ```
-> (Want to run the FE standalone with no backend at all, e.g. for a quick demo? Use the `feature/offline-demo-fallback` branch instead, which keeps an in-memory data source.)
+> (Want to run the FE standalone with no backend at all, e.g. for a quick demo? Use the `feature/interview-standalone` branch instead, which keeps an in-memory data source.)
 
 ### Interactive picker (Windows or Android)
 ```bat
@@ -118,7 +130,7 @@ builder.Services.AddSingleton<IDashboardDataService>(_ =>
     }));
 ```
 
-Because ViewModels only depend on the interface, an alternate implementation (in-memory, cached, a different backend) is a one-line DI swap away without touching a single ViewModel or XAML file — see the `feature/offline-demo-fallback` branch for a working example (`StaticDashboardDataService`).
+Because ViewModels only depend on the interface, an alternate implementation (in-memory, cached, a different backend) is a one-line DI swap away without touching a single ViewModel or XAML file — see the `feature/interview-standalone` branch for a working example (`StaticDashboardDataService`).
 
 Endpoints consumed: `GET/POST/DELETE /api/dashboard/{cards|revenue-cards|activities|orders|traffic}`, `GET /health` — see [HighFidelity-Api](https://github.com/srai54/HighFidelity-Api) for the backend implementation.
 
