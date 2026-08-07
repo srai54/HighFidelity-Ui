@@ -42,7 +42,17 @@
                     <components:TrafficChartView x:Name="TrafficChart" Grid.Column="1" ItemsSource="{Binding TrafficSources}" />
                 </Grid>
 
-                <!-- Row 2: analytics cards. Columns mirror the top row (0.85*3 = 2.55) so the
+                <!-- Row 2: Documents — promoted above the analytics cards so the upload
+                     action and document list are reachable without scrolling past the
+                     whole dashboard (previously the last item in this stack, at the very
+                     bottom of the page). -->
+                <components:DocumentUploadView
+                    Documents="{Binding Documents}"
+                    UploadDocumentCommand="{Binding UploadDocumentCommand}"
+                    DocumentStatusSummary="{Binding DocumentStatusSummary}"
+                    DeadLetterCount="{Binding DeadLetterCount}" />
+
+                <!-- Row 3: analytics cards. Columns mirror the top row (0.85*3 = 2.55) so the
                      last card lines up exactly under the Traffic card. -->
                 <Grid x:Name="RevenueRowGrid"
                       ColumnDefinitions="0.85*,0.85*,0.85*,*"
@@ -85,19 +95,11 @@
                         AccentColor="{Binding RevenueStatusAltCard.AccentHex, Converter={StaticResource HexToColorConverter}}" />
                 </Grid>
 
-                <!-- Row 3: Recent Activities + Order Status -->
+                <!-- Row 4: Recent Activities + Order Status -->
                 <Grid x:Name="BottomRowGrid" ColumnDefinitions="2*,3*" ColumnSpacing="8">
                     <components:ActivityTimelineView />
                     <components:OrderTableView x:Name="OrderTable" Grid.Column="1" />
                 </Grid>
-
-                <!-- Row 4: Documents -->
-                <components:DocumentUploadView
-                    Grid.Row="4"
-                    Documents="{Binding Documents}"
-                    UploadDocumentCommand="{Binding UploadDocumentCommand}"
-                    DocumentStatusSummary="{Binding DocumentStatusSummary}"
-                    DeadLetterCount="{Binding DeadLetterCount}" />
             </VerticalStackLayout>
         </ScrollView>
 
